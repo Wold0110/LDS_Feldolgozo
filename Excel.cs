@@ -1,0 +1,527 @@
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Office.Interop.Excel;
+using _Excel = Microsoft.Office.Interop.Excel;
+using System.Diagnostics;
+
+namespace LDS_Feldolgozo
+{
+    internal class ExcelSource
+    {
+        static List<Line> lines = new List<Line>();
+        static LDSexport src;
+        static Excel trg;
+
+        static DateTime to;
+        static DateTime from;
+
+        public static void createExcel(string path)
+        {
+            Excel res = new Excel();
+            res.wb.SaveAs(path);
+            res.wb.Close();
+        }
+        private static void printLine(Line l, int mode, int cycle)
+        {
+            if (mode == 1)
+            {
+                //formatting
+                int shift = cycle * 12 + (int)Math.Floor((double)cycle / 4) * 4;
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[3 + shift, 2]].Merge();
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[3 + shift, 2]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+                switch (l.type)
+                {
+                    case LineType.Area:
+                        trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[3 + shift, 2]].Interior.ColorIndex = 3;
+                        trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[3 + shift, 2]].Font.ColorIndex = 2;
+
+                        break;
+                    case LineType.Group:
+                        trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[3 + shift, 2]].Interior.ColorIndex = 4;
+                        break;
+                }
+                    
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[7 + shift, 1]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+                trg.ws.Range[trg.ws.Cells[2 + shift, 2], trg.ws.Cells[7 + shift, 2]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+
+                trg.ws.Range[trg.ws.Cells[9 + shift, 1], trg.ws.Cells[12 + shift, 1]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+                trg.ws.Range[trg.ws.Cells[9 + shift, 2], trg.ws.Cells[12 + shift, 2]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+
+
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[12 + shift, 1]].Font.Bold = true;
+
+                trg.ws.Cells[2 + shift, 1].WrapText = true;
+
+                trg.ws.Cells[2 + shift, 1].HorizontalAlignment = XlHAlign.xlHAlignCenter;
+                trg.ws.Cells[2 + shift, 1].VerticalAlignment = XlVAlign.xlVAlignCenter;
+
+                //data
+
+                trg.ws.Cells[2 + shift, 1].Value2 = l.name.Split('\\').TakeLast(1).ToList()[0];
+
+                trg.ws.Cells[4 + shift, 1].Value2 = "Target: " + Math.Round(l.oeeTarget, 2);
+                trg.ws.Cells[4 + shift, 2].Value2 = "Valós: " + Math.Round(l.getOee(), 2);
+                trg.ws.Cells[4 + shift, 2].HorizontalAlignment = XlHAlign.xlHAlignRight;
+
+                trg.ws.Cells[5 + shift, 1].Value2 = "Jó";
+                trg.ws.Cells[5 + shift, 2].Value2 = l.getGood();
+
+                trg.ws.Cells[6 + shift, 1].Value2 = "Rossz";
+                trg.ws.Cells[6 + shift, 2].Value2 = l.getBad();
+
+                trg.ws.Cells[7 + shift, 1].Value2 = "Futási idő:";
+                trg.ws.Cells[7 + shift, 2].Value2 = minToString(l.getRuntime());
+
+                trg.ws.Cells[9 + shift, 1].Value2 = "áll g";
+                trg.ws.Cells[9 + shift, 2].Value2 = secToString(l.downtimeG());
+                trg.ws.Cells[10 + shift, 1].Value2 = "áll gnm";
+                trg.ws.Cells[11 + shift, 1].Value2 = "áll k";
+                trg.ws.Cells[12 + shift, 1].Value2 = "hiány";
+
+
+                //downtime
+                trg.ws.Cells[2 + shift, 4].Value2 = "Hiba";
+                trg.ws.Cells[2 + shift, 5].Value2 = "Idő";
+
+                trg.ws.Cells[2 + shift, 4].Font.Bold = true;
+                trg.ws.Cells[2 + shift, 5].Font.Bold = true;
+
+                List<Downtime> dtl = l.topNdowntime(10);
+                int x = 0;
+                foreach (Downtime dt in dtl)
+                {
+                    trg.ws.Cells[3 + shift + x, 4].Value2 = dt.reason;
+                    trg.ws.Cells[3 + shift + x, 5].Value2 = secToString(dt.time);
+                    ++x;
+                }
+            }
+            //day-by-day
+            if (mode == 2)
+            {
+                int shift = cycle * 13;
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].Merge();
+                trg.ws.Cells[2 + shift, 1].Value2 = l.name.Split('\\').TakeLast(1).ToList()[0];
+                trg.ws.Cells[2 + shift, 1].HorizontalAlignment = XlHAlign.xlHAlignCenter;
+                trg.ws.Cells[2 + shift, 1].VerticalAlignment = XlVAlign.xlVAlignCenter;
+                trg.ws.Cells[2 + shift, 1].Font.Bold = true;
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[12 + shift, 1]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+                trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+
+                string[] t = "OEE;Jó;Rossz;MTTR;MTBF;Állás 1;Állás 2;Állás 3".Split(';');
+                for (int k = 0; k < 8; ++k)
+                {
+                    trg.ws.Cells[5 + shift + k, 1].Value2 = t[k];
+                    trg.ws.Cells[5 + shift + k, 1].Font.Bold = true;
+                }
+                int x = 0;
+                for (DateTime i = from; i <= to; i = i.AddDays(1))
+                {
+                    trg.ws.Range[trg.ws.Cells[3 + shift, 2 + x], trg.ws.Cells[12 + shift, 4 + x]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
+
+                    trg.ws.Range[trg.ws.Cells[3 + shift, 2 + x], trg.ws.Cells[3 + shift, 4 + x]].Merge();
+                    trg.ws.Cells[3 + shift, 2 + x].Value2 = i.ToString("yyyy-MM-dd");
+                    trg.ws.Cells[3 + shift, 2 + x].HorizontalAlignment = XlHAlign.xlHAlignCenter;
+                    trg.ws.Cells[3 + shift, 2 + x].Font.Bold = true;
+
+                    for (int k = 0; k < 3; ++k)
+                    {
+                        trg.ws.Cells[4 + shift, 2 + x + k].Value2 = k == 0 ? "DE" : (k == 1 ? "DU" : "ÉJ");
+                        trg.ws.Cells[4 + shift, 2 + x + k].Font.Bold = true;
+
+                        trg.ws.Cells[5 + shift, 2 + x + k].Value2 = l.getOee(k + 1, i);
+                        trg.ws.Cells[6 + shift, 2 + x + k].Value2 = l.getGood(k + 1, i);
+                        trg.ws.Cells[7 + shift, 2 + x + k].Value2 = l.getBad(k + 1, i);
+                        double mtbf = l.getMTBF(k + 1, i);
+                        string mtbfString = "*MTBF*";
+                        switch (mtbf)
+                        {
+                            case -1:
+                                mtbfString = "No Run";
+                                break;
+                            case -2:
+                                mtbfString = "No Downtime";
+                                break;
+                            default:
+                                mtbfString = mtbf + "";
+                                break;
+                        }
+                        double mttr = l.getMTTR(k + 1, i);
+                        string mttrString = "*MTTR*";
+                        switch (mttr)
+                        {
+                            case -2:
+                                mttrString = "No Downtime";
+                                break;
+                            default:
+                                mttrString = mttr + "";
+                                break;
+                        }
+                        trg.ws.Cells[8 + shift, 2 + x + k].Value2 = mttrString; //MTTR - Mean time to repair
+                        trg.ws.Cells[8 + shift, 2 + x + k].HorizontalAlignment = XlHAlign.xlHAlignFill;
+                        trg.ws.Cells[9 + shift, 2 + x + k].Value2 = mtbfString; //MTBF - Mean time between failures
+                        trg.ws.Cells[9 + shift, 2 + x + k].HorizontalAlignment = XlHAlign.xlHAlignFill;
+
+                        List<Downtime> dtl = new List<Downtime>();
+                        dtl = l.topNdowntime(3, k + 1, i);
+                        for (int y = 0; y < Math.Min(dtl.Count, 3); ++y)
+                        {
+                            trg.ws.Cells[10 + shift + y, 2 + x + k].Value2 = secToString(dtl[y].time) + " - " + dtl[y].reason;
+                            trg.ws.Cells[10 + shift + y, 2 + x + k].HorizontalAlignment = XlHAlign.xlHAlignFill;
+                        }
+                    }
+                    x += 3;
+                }
+            }
+        }
+        public static void write(string target, int mode, bool doGroup, bool abc)
+        {
+            /*
+            1 sum
+            2 day-by-day
+             */
+            List<Area> areas = new List<Area>();
+            if (doGroup)
+            {
+                string[] t = File.ReadAllLines("csoportok.csv", System.Text.Encoding.UTF8);
+                for(int x = 1; x < t.Length; ++x)
+                {
+                    string[] tmp = t[x].Split(',');
+                    string area = tmp[tmp.Length - 1];
+                    string group = tmp[tmp.Length - 2];
+                    string name = "";
+                    for (int i = 0; i <= tmp.Length - 3; ++i)
+                        name += "," + tmp[i];
+                    name = name.Substring(1).Replace("\"", "");
+
+                    int areaIndex = Area.exists(area, areas);
+                    if (areaIndex != -1)
+                    {
+                        int groupIndex = Group.exists(group, areas[areaIndex].groups);
+                        if (groupIndex != -1)
+                        {
+                            foreach (Line l in lines)
+                                if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
+                                    areas[areaIndex].groups[groupIndex].lines.Add(l);
+                        }
+                        else
+                        {
+                            Group groupTmp = new Group(group);
+                            foreach (Line l in lines)
+                                if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
+                                    groupTmp.lines.Add(l);
+                            areas[areaIndex].groups.Add(groupTmp);
+                        }
+                    }
+                    else
+                    {
+                        Area areaTmp = new Area(area);
+                        Group groupTmp = new Group(group);
+
+                        foreach (Line l in lines)
+                            if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
+                                groupTmp.lines.Add(l);
+                            
+
+                        areaTmp.groups.Add(groupTmp);
+                        areas.Add(areaTmp);
+                    }
+                }
+            }
+
+            trg = new Excel(target);
+            //sum
+            trg.ws.Cells.Clear();
+            if (mode == 1)
+            {
+                trg.ws.Cells.Font.Size = 11;
+                for (int i = 1; i < 3; i++)
+                    trg.ws.Columns[i].ColumnWidth = 15;
+                trg.ws.Columns[3].ColumnWidth = 5;
+
+                trg.ws.Columns[4].ColumnWidth = 40;
+                trg.ws.Columns[5].ColumnWidth = 10;
+                trg.ws.Columns[6].ColumnWidth = 12;
+
+                trg.ws.Rows.RowHeight = 15;
+            }
+            //day-by-day
+            if (mode == 2)
+            {
+                DatePickers dp = new DatePickers(from, to);
+                dp.ShowDialog();
+
+                trg.ws.Columns.ColumnWidth = 4.86;
+
+                trg.ws.Rows.RowHeight = 12;
+                trg.ws.Cells.Clear();
+                trg.ws.Cells.Style.Font.Size = 8;
+
+                trg.ws.Range[trg.ws.Cells[1, 4], trg.ws.Cells[1, 5]].Merge();
+                trg.ws.Cells[1, 4].Value2 = from.ToString("yyyy-MM-dd");
+
+                trg.ws.Range[trg.ws.Cells[1, 6], trg.ws.Cells[1, 7]].Merge();
+                trg.ws.Cells[1, 6].Value2 = to.ToString("yyyy-MM-dd");
+
+                trg.exe.ActiveWindow.Zoom = 115;
+            }
+            if (mode != 0)
+            {
+                if (doGroup)
+                {
+                    int index = 0;
+                    areas.Sort((a, b) => a.name.CompareTo(b.name));
+                    foreach (Area a in areas)
+                    {
+                        if (abc)
+                            a.groups.Sort((a, b) => a.name.CompareTo(b.name));
+                        printLine(a.fakeLine(), mode, index++);
+                        foreach (Group g in a.groups)
+                        {
+                            if(abc)
+                                g.lines.Sort((a,b)=>a.name.CompareTo(b.name));
+                            printLine(g.fakeLine(), mode, index++);
+                            foreach (Line l in g.lines)
+                                printLine(l, mode, index++);
+                        }
+                    }
+                }
+                else
+                {
+                    lines.Sort((a, b) => a.name.Split('\\').TakeLast(1).ToList()[0].
+                        CompareTo(b.name.Split('\\').TakeLast(1).ToList()[0]));
+                    for (int i = 0; i < lines.Count; i++)
+                        printLine(lines[i], mode, i);
+                }
+            }    
+            trg.Close();
+        }
+        private static bool readProdLine(int i)
+        {
+            string name = src.readString(0, 1 + i, src.prod);
+            if (name == null)
+                return false;
+            double date = src.readDouble(3, 1 + i, src.prod);
+            double shift = src.readDouble(4, 1 + i, src.prod);
+            double runtime = src.readDouble(7, 1 + i, src.prod);
+            double good = src.readDouble(10, 1 + i, src.prod);
+            double repair = src.readDouble(11, 1 + i, src.prod);
+            double bad = src.readDouble(12, 1 + i, src.prod);
+            double scrap = src.readDouble(13, 1 + i, src.prod);
+            double oee = src.readDouble(19, 1 + i, src.prod);
+            double sur = src.readDouble(20, 1 + i, src.prod);
+            double oeeTarget = src.readDouble(24, 1 + i, src.prod);
+            int index = containsLine(name);
+            if (index == -1)
+            {
+                //add new
+                Line tmp = new Line(name);
+                tmp.AddShift(oeeTarget, sur,
+                    new Shift(shift, DateTime.FromOADate(date), oee, good, bad, runtime));
+                lines.Add(tmp);
+            }
+            else
+            {
+                //append
+                lines[index].AddShift(oeeTarget, sur,
+                    new Shift(shift, DateTime.FromOADate(date), oee, good, bad, runtime));
+            }
+            to = DateTime.FromOADate(date) > to ? DateTime.FromOADate(date) : to;
+            from = DateTime.FromOADate(date) < from ? DateTime.FromOADate(date) : from;
+
+            return true;
+        }
+        private static bool readDownLine(int i)
+        {
+            string name = src.readString(4, 1 + i, src.downtime);
+            if (name == null)
+            {
+                return false;
+            }
+            double date = src.readDouble(9, 1 + i, src.downtime);
+            string[] timeArr = src.readString(8, 1 + i, src.downtime).Split(':');
+            double timeDouble = (((Convert.ToDouble(timeArr[0]) * 60)
+                + Convert.ToDouble(timeArr[1])) * 60) + Convert.ToDouble(timeArr[2]);
+            double shift = src.readDouble(0, 1 + i, src.downtime);
+            string reason = src.readString(5, 1 + i, src.downtime);
+            int index = containsLine(name);
+            if (index != -1)
+                lines[index].AddDowntime(shift, DateTime.FromOADate(date), new Downtime(reason, timeDouble));
+            return true;
+        }
+        public static void read(string source)
+        {
+            lines.Clear();
+            from = DateTime.Now; //hogy legyen minél kisebb
+            src = new LDSexport(source);
+            bool running = true;
+            int i = 0;
+            while (running)
+            {
+                running = running && readProdLine(i); i++;
+            }
+            running = true;
+            i = 0;
+            while (running)
+            {
+                running = running && readDownLine(i); i++;
+            }
+            src.Close();
+        }
+        public static string printDemo()
+        {
+            string res = "";
+            foreach (Line l in lines)
+            {
+                res += (l.name + "\r\n" + l.getOee() + "\r\n" + l.getGood() + "\r\nshift db:" + l.shifts.Count + "\r\n");
+                List<Downtime> dtl = l.topNdowntime(10);
+
+                for (int i = 0; i < Math.Min(dtl.Count, 10); i++)
+                    res += (dtl[i].reason + " " + secToString(dtl[i].time) + "\r\n");
+                res += ("\r\n");
+            }
+            return res;
+        }
+        #region support_funcitons
+        private static int containsLine(string name)
+        {
+            for (int i = 0; i < lines.Count; i++)
+                if (String.Compare(lines[i].name, name) == 0)
+                    return i;
+            return -1;
+        }
+        public static string secToString(double time)
+        {
+            double h = Math.Floor(time / 3600);
+            time -= h * 3600;
+            double m = Math.Floor(time / 60);
+            double s = time - m * 60;
+            string value = "";
+
+            if (h < 10)
+                value += "0";
+            value += h + ":";
+
+            if (m < 10)
+                value += "0";
+            value += m + ":";
+
+            if (s < 10)
+                value += "0";
+            value += s;
+
+            return value;
+        }
+        public static string minToString(double time)
+        {
+            double h = Math.Floor(time / 60);
+            time -= h * 60;
+            string value = "";
+
+            if (h < 10)
+                value += "0";
+            value += h + ":";
+
+            if (time < 10)
+                value += "0";
+            value += time + ":00";
+
+            return value;
+        }
+        #endregion support_funcitons
+    }
+
+    internal class Excel
+    {
+        public _Application exe = new _Excel.Application();
+
+        string path;
+        public Workbook wb;
+        public Worksheet ws;
+        public Excel(string path)
+        {
+            this.path = path;
+            this.wb = this.exe.Workbooks.Open(path);
+            this.ws = this.wb.Worksheets[1];
+        }
+        public Excel()
+        {
+            this.wb = exe.Workbooks.Add(XlWBATemplate.xlWBATWorksheet);
+        }
+        private void KillSpecificExcelFileProcess(string excelFileName)
+        {
+            try
+            {
+                var processes = from p in Process.GetProcessesByName("EXCEL")
+                                select p;
+                //specific  -> Microsoft Excel - asd.xlsx
+                //embed     -> ""
+                foreach (var process in processes)
+                {
+                    if (excelFileName == process.MainWindowTitle)
+                        process.Kill();
+                }
+            }
+            catch { /* ¯\_(ツ)_/¯   */}
+        }
+        public void Close()
+        {
+            Marshal.FinalReleaseComObject(ws);
+
+            wb.Close(true, Type.Missing, Type.Missing);
+            Marshal.FinalReleaseComObject(wb);
+
+            exe.Quit();
+            Marshal.FinalReleaseComObject(exe);
+
+            KillSpecificExcelFileProcess(""); 
+            GC.Collect();
+        }
+        public void writeString(int x, int y,string value) {
+            ws.Cells[y + 1, x + 1].value2 = value;
+        }
+        public void writeDouble(int x, int y, double value)
+        {
+            ws.Cells[y + 1, x + 1].value2 = value;
+        }
+    }
+    internal class LDSexport {
+        string path;
+        _Application exe = new _Excel.Application();
+        Workbook wb;
+        public Worksheet prod;
+        public Worksheet downtime;
+        public LDSexport(string path) { 
+            this.path = path;
+            this.wb   = this.exe.Workbooks.Open(path);
+            foreach(Worksheet x in wb.Sheets)
+            {
+                switch (x.Name) {
+                    case "Production Summary":
+                        prod = x;
+                        break;
+                    case "Downtime Reasons":
+                        downtime = x;
+                        break;
+                }
+            }
+        }
+        public void Close()
+        {
+            wb.Close(0);
+            exe.Quit();
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(exe);
+        }
+        public string readString(int x, int y, Worksheet ws)
+        {
+            return ws.Cells[y + 1, x + 1].Value2;
+        }
+        public double readDouble(int x, int y, Worksheet ws)
+        {
+            return ws.Cells[y + 1, x + 1].Value2;
+        }
+    }
+}
