@@ -15,6 +15,7 @@ namespace LDS_Feldolgozo
             doGroups.Text = "Csoportosítás";
             doABC.Text = "ÁBÉCÉ sorrend";
             this.Size = new Size(450, 320);
+            progressBar.Hide();
         }
 
         //globális fájl útvonalak
@@ -26,17 +27,14 @@ namespace LDS_Feldolgozo
 
         ExcelSource es;
         ExcelOutput eo;
-        public void Update(string status) {
-            statusText.Text = status +" "+(count++);
-        }
+        public void Update(string status) {statusText.Text = status +" "+(count++);}
         private void Wait(string outputFile)
         {
             while (wait)
                 Thread.Sleep(250);
 
-            MessageBox.Show("irás kezdõdik");
+            textBox1.AppendText("Írás kezdetét vette...\r\n");
             ExcelOutput.createExcel(outputFile);
-            
             int mode = 0;
             mode = sumMode.Checked ? 1 : mode;
             mode = dayByDayMode.Checked ? 2 : mode;
@@ -46,7 +44,6 @@ namespace LDS_Feldolgozo
 
             eo.Close();
             //Close() menti is
-
         }
         //OK gomb
         private void okBtn_Click(object sender, EventArgs e)
@@ -122,7 +119,7 @@ namespace LDS_Feldolgozo
             }
             else
             {
-                MessageBox.Show("Az olvasás nem történt meg!\r\n");
+                textBox1.AppendText("Az olvasás nem történt meg!\r\n");
                 sourceFile = "";
             }
         }

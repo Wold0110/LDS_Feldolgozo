@@ -17,8 +17,8 @@ namespace LDS_Feldolgozo
         List<Line> lines;
         DateTime to;
         DateTime from;
-        
-        public ExcelOutput(string target,List<Line> lines,DateTime from,DateTime to)
+        MainForm form;
+        public ExcelOutput(string target, List<Line> lines, DateTime from, DateTime to)
         {
             trg = new Excel(target);
             this.to = to;
@@ -54,6 +54,7 @@ namespace LDS_Feldolgozo
         //egy sort ír ki, l -> sor, mode -> bontás/szumma, cycle -> eltolás
         private void printLine(Line l, int mode, int cycle)
         {
+            form.progressBar.Value = cycle;
             if (mode == 1)
             {
                 //formatting
@@ -215,7 +216,7 @@ namespace LDS_Feldolgozo
             }
         }
         //publikus író függvény, ez megy végig a lineokot és írja ki őket
-        public void Write(int mode, bool doGroup, bool abc,MainForm form)
+        public void Write(int mode, bool doGroup, bool abc, MainForm form)
         {
             /* modes
              * 
@@ -223,7 +224,11 @@ namespace LDS_Feldolgozo
              * 2 day-by-day
              * 
              */
-            //olvasásra várakozás
+            this.form = form;
+            this.form.statusText.Hide();
+            this.form.progressBar.Show();
+            this.form.progressBar.Minimum = 0;
+            int max = lines.Count;
 
             #region grouping
             //amennyiben szükséges csoportosítja a sorokat, TODO: 'egyébb' csoport létrehozása
@@ -264,11 +269,9 @@ namespace LDS_Feldolgozo
                     {
                         Area areaTmp = new Area(area);
                         Group groupTmp = new Group(group);
-
                         foreach (Line l in lines)
                             if (String.Compare(l.displayName, name) == 0)
                                 groupTmp.lines.Add(l);
-
                         areaTmp.groups.Add(groupTmp);
                         areas.Add(areaTmp);
                     }
@@ -276,12 +279,13 @@ namespace LDS_Feldolgozo
 
                 // 'egyéb' csoport
                 Area etc = null;
-                foreach (Line l in lines) {
+                foreach (Line l in lines)
+                {
                     bool found = false;
                     foreach (Area a in areas)
                         foreach (Group g in a.groups)
-                            foreach(Line tmp in g.lines)
-                                if(String.Compare(tmp.displayName,l.displayName) == 0)
+                            foreach (Line tmp in g.lines)
+                                if (String.Compare(tmp.displayName, l.displayName) == 0)
                                     found = true;
                     if (!found)
                     {
@@ -299,9 +303,32 @@ namespace LDS_Feldolgozo
                 }
                 if (etc != null)
                     areas.Add(etc);
-            }
-            #endregion grouping
-            
+                //üres group/area törlése
+                for (int x = 0; x < areas.Count; ++x)
+                {
+                    for (int y = 0; y < areas[x].groups.Count; ++y)
+                    {
+                        if (areas[x].groups[y].lines.Count == 0)
+                        {
+                            areas[x].groups.RemoveAt(y);
+                            --y;
+                        }
+                    }
+
+                }
+                for (int x = 0; x < areas.Count; ++x)
+                {
+                    if (areas[x].groups.Count == 0)
+                    {
+                        areas[x].groups.RemoveAt(0);
+                        --x;
+                    }
+                }
+                foreach (Area a in areas)
+                    max += 1 + a.groups.Count;
+
+                #endregion grouping
+
             #region setup
             //sum
             trg.ws.Cells.Clear();
@@ -324,7 +351,7 @@ namespace LDS_Feldolgozo
                 DatePickers dp = new DatePickers(from, to);
                 dp.ShowDialog();
 
-                trg.ws.Columns.ColumnWidth = 4.86;
+                trg.ws.Columns.ColumnWidth = 5;
 
                 trg.ws.Rows.RowHeight = 12;
                 trg.ws.Cells.Clear();
@@ -339,9 +366,10 @@ namespace LDS_Feldolgozo
                 trg.exe.ActiveWindow.Zoom = 115;
             }
             #endregion setup
-            
+
             if (mode != 0)
             {
+                this.form.progressBar.Maximum = max;
                 if (doGroup)
                 {
                     int index = 0;
@@ -368,7 +396,12 @@ namespace LDS_Feldolgozo
                         printLine(lines[i], mode, i);
                 }
             }
-            MessageBox.Show("Sikeres írás!");
+            this.form.statusText.Show();
+            this.form.statusText.Text = "";
+            this.form.progressBar.Hide();
+            this.form.textBox1.AppendText("Írás kész!\r\n");
+
+            }
         }
     }
     //olvasó osztály
@@ -379,11 +412,8 @@ namespace LDS_Feldolgozo
         List<LDSexport> exports = new List<LDSexport>();
         List<bool> status = new List<bool>();
         List<Thread> threads = new List<Thread>();
-        
         private string sourcePath;
-        
         int threadNum = 4;
-
         public DateTime to;
         public DateTime from;
 
@@ -470,11 +500,8 @@ namespace LDS_Feldolgozo
         public void Read(MainForm form)
         {
             this.form = form;
-
             lines.Clear();
-
             from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
-
             for(int j = 0; j < threadNum; ++j)
             {
                 status.Add(true);
@@ -484,9 +511,7 @@ namespace LDS_Feldolgozo
                 t.Start();
                 threads.Add(t);
             }
-
             wait();
-            //MessageBox.Show("prod kész");
             for (int j = 0; j < threadNum; ++j)
             {
                 status[j] = true;
@@ -495,8 +520,6 @@ namespace LDS_Feldolgozo
                 threads[j].Start();
             }
             wait();
-            
-            //MessageBox.Show("down kész");
             form.wait = false;
         }
 

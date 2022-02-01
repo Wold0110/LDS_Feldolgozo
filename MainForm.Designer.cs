@@ -38,6 +38,7 @@
             this.doGroups = new System.Windows.Forms.CheckBox();
             this.doABC = new System.Windows.Forms.CheckBox();
             this.statusText = new System.Windows.Forms.TextBox();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // okBtn
@@ -111,12 +112,19 @@
             this.statusText.BackColor = System.Drawing.Color.Green;
             this.statusText.ForeColor = System.Drawing.Color.White;
             this.statusText.Name = "statusText";
+            this.statusText.ReadOnly = true;
+            // 
+            // progressBar
+            // 
+            resources.ApplyResources(this.progressBar, "progressBar");
+            this.progressBar.Name = "progressBar";
             // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.statusText);
             this.Controls.Add(this.doABC);
             this.Controls.Add(this.doGroups);
@@ -137,11 +145,13 @@
         private Button okBtn;
         private Button readBtn;
         private Button newfileBtn;
-        private TextBox textBox1;
         private RadioButton sumMode;
         private RadioButton dayByDayMode;
         private CheckBox doGroups;
         private CheckBox doABC;
-        private TextBox statusText;
+        //hogy írószál tudjon váltani közöttük
+        public TextBox textBox1;
+        public TextBox statusText;
+        public ProgressBar progressBar;
     }
 }
