@@ -130,6 +130,20 @@ namespace LDS_Feldolgozo
                 trg.ws.Cells[2 + shift, 1].HorizontalAlignment = XlHAlign.xlHAlignCenter;
                 trg.ws.Cells[2 + shift, 1].VerticalAlignment = XlVAlign.xlVAlignCenter;
                 trg.ws.Cells[2 + shift, 1].Font.Bold = true;
+                switch (l.type)
+                {
+                    case LineType.Area:
+                        trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].Interior.ColorIndex = 3;
+                        trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].Font.ColorIndex = 2;
+
+                        break;
+                    case LineType.Group:
+                        trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].Interior.ColorIndex = 4;
+                        break;
+                }
+
+
+
                 trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[12 + shift, 1]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
                 trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
 
@@ -420,11 +434,6 @@ namespace LDS_Feldolgozo
             }
             src.Close();
         }
-        
-        #region support_funcitons
-        
-        
-        #endregion support_funcitons
     }
 
     internal class Excel

@@ -10,6 +10,10 @@ namespace LDS_Feldolgozo
         {
             InitializeComponent();
             textBox1.ReadOnly = true;
+            dayByDayMode.Text = "Napi lebontás";
+            doGroups.Text = "Csoportosítás";
+            doABC.Text = "ÁBÉCÉ sorrend";
+            this.Size = new Size(450, 300);
         }
         string sourceFile;
         string outputPath;

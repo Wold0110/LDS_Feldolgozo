@@ -153,7 +153,7 @@ namespace LDS_Feldolgozo
                 return -1; //nem futott
             if (c == 0)
                 return -2; //nem állt le
-            return c/t;
+            return t/c;
         }
         public double getMTTR(int shift, DateTime date)
         {
@@ -172,7 +172,7 @@ namespace LDS_Feldolgozo
             }
             if (c == 0)
                 return -2;
-            return t / c;
+            return (t/60) / c;
         }
         public List<Downtime> topNdowntime(int n)
         {
