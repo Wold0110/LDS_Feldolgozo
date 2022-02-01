@@ -32,7 +32,7 @@ namespace LDS_Feldolgozo
                     DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".xlsx";
                 ExcelSource es = new ExcelSource(sourceFile);
                 es.Read();
-
+                textBox1.AppendText("Olvasás kést, írás kezdõdik...");
                 ExcelOutput.createExcel(outputFile);
                 ExcelOutput eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
 

@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="csoportok.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="Microsoft.Office.Interop.Excel">
       <WrapperTool>tlbimp</WrapperTool>
       <VersionMinor>9</VersionMinor>
@@ -23,6 +27,12 @@
 
   <ItemGroup>
     <Content Include="se.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="csoportok.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
