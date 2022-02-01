@@ -10,22 +10,44 @@ using System.Diagnostics;
 
 namespace LDS_Feldolgozo
 {
-    internal class ExcelSource
+    internal class ExcelOutput
     {
-        static List<Line> lines = new List<Line>();
-        static LDSexport src;
-        static Excel trg;
-
-        static DateTime to;
-        static DateTime from;
-
+        Excel trg;
+        List<Line> lines;
+        DateTime to;
+        DateTime from;
+        public ExcelOutput(string target,List<Line> lines,DateTime from,DateTime to)
+        {
+            trg = new Excel(target);
+            this.to = to;
+            this.from = from;
+            this.lines = lines;
+        }
+        public void Close()
+        {
+            trg.Close();
+        }
         public static void createExcel(string path)
         {
             Excel res = new Excel();
             res.wb.SaveAs(path);
             res.wb.Close();
         }
-        private static void printLine(Line l, int mode, int cycle)
+        public string PrintDemo()
+        {
+            string res = "";
+            foreach (Line l in lines)
+            {
+                res += (l.name + "\r\n" + l.getOee() + "\r\n" + l.getGood() + "\r\nshift db:" + l.shifts.Count + "\r\n");
+                List<Downtime> dtl = l.topNdowntime(10);
+
+                for (int i = 0; i < Math.Min(dtl.Count, 10); i++)
+                    res += (dtl[i].reason + " " + Functions.secToString(dtl[i].time) + "\r\n");
+                res += ("\r\n");
+            }
+            return res;
+        }
+        private void printLine(Line l, int mode, int cycle)
         {
             if (mode == 1)
             {
@@ -44,7 +66,7 @@ namespace LDS_Feldolgozo
                         trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[3 + shift, 2]].Interior.ColorIndex = 4;
                         break;
                 }
-                    
+
                 trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[7 + shift, 1]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
                 trg.ws.Range[trg.ws.Cells[2 + shift, 2], trg.ws.Cells[7 + shift, 2]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
 
@@ -74,10 +96,10 @@ namespace LDS_Feldolgozo
                 trg.ws.Cells[6 + shift, 2].Value2 = l.getBad();
 
                 trg.ws.Cells[7 + shift, 1].Value2 = "Futási idő:";
-                trg.ws.Cells[7 + shift, 2].Value2 = minToString(l.getRuntime());
+                trg.ws.Cells[7 + shift, 2].Value2 = Functions.minToString(l.getRuntime());
 
                 trg.ws.Cells[9 + shift, 1].Value2 = "áll g";
-                trg.ws.Cells[9 + shift, 2].Value2 = secToString(l.downtimeG());
+                trg.ws.Cells[9 + shift, 2].Value2 = Functions.secToString(l.downtimeG());
                 trg.ws.Cells[10 + shift, 1].Value2 = "áll gnm";
                 trg.ws.Cells[11 + shift, 1].Value2 = "áll k";
                 trg.ws.Cells[12 + shift, 1].Value2 = "hiány";
@@ -95,7 +117,7 @@ namespace LDS_Feldolgozo
                 foreach (Downtime dt in dtl)
                 {
                     trg.ws.Cells[3 + shift + x, 4].Value2 = dt.reason;
-                    trg.ws.Cells[3 + shift + x, 5].Value2 = secToString(dt.time);
+                    trg.ws.Cells[3 + shift + x, 5].Value2 = Functions.secToString(dt.time);
                     ++x;
                 }
             }
@@ -169,7 +191,7 @@ namespace LDS_Feldolgozo
                         dtl = l.topNdowntime(3, k + 1, i);
                         for (int y = 0; y < Math.Min(dtl.Count, 3); ++y)
                         {
-                            trg.ws.Cells[10 + shift + y, 2 + x + k].Value2 = secToString(dtl[y].time) + " - " + dtl[y].reason;
+                            trg.ws.Cells[10 + shift + y, 2 + x + k].Value2 = Functions.secToString(dtl[y].time) + " - " + dtl[y].reason;
                             trg.ws.Cells[10 + shift + y, 2 + x + k].HorizontalAlignment = XlHAlign.xlHAlignFill;
                         }
                     }
@@ -177,17 +199,19 @@ namespace LDS_Feldolgozo
                 }
             }
         }
-        public static void write(string target, int mode, bool doGroup, bool abc)
+        public void Write(int mode, bool doGroup, bool abc)
         {
-            /*
+            /* modes
             1 sum
             2 day-by-day
              */
+
+            #region grouping
             List<Area> areas = new List<Area>();
             if (doGroup)
             {
                 string[] t = File.ReadAllLines("csoportok.csv", System.Text.Encoding.UTF8);
-                for(int x = 1; x < t.Length; ++x)
+                for (int x = 1; x < t.Length; ++x)
                 {
                     string[] tmp = t[x].Split(',');
                     string area = tmp[tmp.Length - 1];
@@ -224,15 +248,16 @@ namespace LDS_Feldolgozo
                         foreach (Line l in lines)
                             if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
                                 groupTmp.lines.Add(l);
-                            
+
 
                         areaTmp.groups.Add(groupTmp);
                         areas.Add(areaTmp);
                     }
                 }
             }
-
-            trg = new Excel(target);
+            #endregion grouping
+            
+            #region setup
             //sum
             trg.ws.Cells.Clear();
             if (mode == 1)
@@ -268,6 +293,8 @@ namespace LDS_Feldolgozo
 
                 trg.exe.ActiveWindow.Zoom = 115;
             }
+            #endregion setup
+            
             if (mode != 0)
             {
                 if (doGroup)
@@ -281,8 +308,8 @@ namespace LDS_Feldolgozo
                         printLine(a.fakeLine(), mode, index++);
                         foreach (Group g in a.groups)
                         {
-                            if(abc)
-                                g.lines.Sort((a,b)=>a.name.CompareTo(b.name));
+                            if (abc)
+                                g.lines.Sort((a, b) => a.name.CompareTo(b.name));
                             printLine(g.fakeLine(), mode, index++);
                             foreach (Line l in g.lines)
                                 printLine(l, mode, index++);
@@ -296,10 +323,32 @@ namespace LDS_Feldolgozo
                     for (int i = 0; i < lines.Count; i++)
                         printLine(lines[i], mode, i);
                 }
-            }    
-            trg.Close();
+            }
+
         }
-        private static bool readProdLine(int i)
+    }
+    internal class ExcelSource
+    {
+        public List<Line> lines = new List<Line>();
+        public LDSexport src;
+        private string sourcePath;
+
+        public DateTime to;
+        public DateTime from;
+        public string path
+        {
+            get
+            {
+                return sourcePath;
+            }
+        }
+
+        public ExcelSource(string path)
+        {
+            sourcePath = path;
+        }
+
+        private bool readProdLine(int i)
         {
             string name = src.readString(0, 1 + i, src.prod);
             if (name == null)
@@ -314,7 +363,7 @@ namespace LDS_Feldolgozo
             double oee = src.readDouble(19, 1 + i, src.prod);
             double sur = src.readDouble(20, 1 + i, src.prod);
             double oeeTarget = src.readDouble(24, 1 + i, src.prod);
-            int index = containsLine(name);
+            int index = Line.exits(name, lines);
             if (index == -1)
             {
                 //add new
@@ -334,7 +383,7 @@ namespace LDS_Feldolgozo
 
             return true;
         }
-        private static bool readDownLine(int i)
+        private bool readDownLine(int i)
         {
             string name = src.readString(4, 1 + i, src.downtime);
             if (name == null)
@@ -347,16 +396,16 @@ namespace LDS_Feldolgozo
                 + Convert.ToDouble(timeArr[1])) * 60) + Convert.ToDouble(timeArr[2]);
             double shift = src.readDouble(0, 1 + i, src.downtime);
             string reason = src.readString(5, 1 + i, src.downtime);
-            int index = containsLine(name);
+            int index = Line.exits(name,lines);
             if (index != -1)
                 lines[index].AddDowntime(shift, DateTime.FromOADate(date), new Downtime(reason, timeDouble));
             return true;
         }
-        public static void read(string source)
+        public void Read()
         {
             lines.Clear();
             from = DateTime.Now; //hogy legyen minél kisebb
-            src = new LDSexport(source);
+            src = new LDSexport(sourcePath);
             bool running = true;
             int i = 0;
             while (running)
@@ -371,66 +420,10 @@ namespace LDS_Feldolgozo
             }
             src.Close();
         }
-        public static string printDemo()
-        {
-            string res = "";
-            foreach (Line l in lines)
-            {
-                res += (l.name + "\r\n" + l.getOee() + "\r\n" + l.getGood() + "\r\nshift db:" + l.shifts.Count + "\r\n");
-                List<Downtime> dtl = l.topNdowntime(10);
-
-                for (int i = 0; i < Math.Min(dtl.Count, 10); i++)
-                    res += (dtl[i].reason + " " + secToString(dtl[i].time) + "\r\n");
-                res += ("\r\n");
-            }
-            return res;
-        }
+        
         #region support_funcitons
-        private static int containsLine(string name)
-        {
-            for (int i = 0; i < lines.Count; i++)
-                if (String.Compare(lines[i].name, name) == 0)
-                    return i;
-            return -1;
-        }
-        public static string secToString(double time)
-        {
-            double h = Math.Floor(time / 3600);
-            time -= h * 3600;
-            double m = Math.Floor(time / 60);
-            double s = time - m * 60;
-            string value = "";
-
-            if (h < 10)
-                value += "0";
-            value += h + ":";
-
-            if (m < 10)
-                value += "0";
-            value += m + ":";
-
-            if (s < 10)
-                value += "0";
-            value += s;
-
-            return value;
-        }
-        public static string minToString(double time)
-        {
-            double h = Math.Floor(time / 60);
-            time -= h * 60;
-            string value = "";
-
-            if (h < 10)
-                value += "0";
-            value += h + ":";
-
-            if (time < 10)
-                value += "0";
-            value += time + ":00";
-
-            return value;
-        }
+        
+        
         #endregion support_funcitons
     }
 

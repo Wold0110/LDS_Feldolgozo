@@ -44,7 +44,13 @@ namespace LDS_Feldolgozo
                 }
             }
         }
-
+        public static int exits(string name, List<Line> l)
+        {
+            for (int i = 0; i < l.Count; i++)
+                if (String.Compare(l[i].name, name) == 0)
+                    return i;
+            return -1;
+        }
         #region line_property
         public double getOee()
         {

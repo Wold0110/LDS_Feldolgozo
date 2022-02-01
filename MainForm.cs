@@ -11,9 +11,48 @@ namespace LDS_Feldolgozo
             InitializeComponent();
             textBox1.ReadOnly = true;
         }
+        string sourceFile;
+        string outputPath;
 
         private void okBtn_Click(object sender, EventArgs e)
         {
+            try
+            {
+                if (sourceFile == "")
+                    throw new NoLDSexportException("Üres string.");
+                if (outputPath == "")
+                    throw new NoExportPathException("Üres string.");
+
+                textBox1.AppendText("Folyamatban...\r\n");
+                string outputFile = outputPath + "\\" + 
+                    DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".xlsx";
+                ExcelSource es = new ExcelSource(sourceFile);
+                es.Read();
+
+                ExcelOutput.createExcel(outputFile);
+                ExcelOutput eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
+
+                int mode = 0;
+                mode = sumMode.Checked ? 1 : mode;
+                mode = dayByDayMode.Checked ? 2 : mode;
+                
+                eo.Write(mode, doGroups.Checked, doABC.Checked);
+                eo.Close();
+
+                textBox1.AppendText("Sikeres írás!\r\n");
+            }
+            catch (NoLDSexportException ex)
+            {
+                textBox1.AppendText("Nincs kijelölt forrás fájl! Próbálja újra miután kijelölte.\r\n");
+            }
+            catch (NoExportPathException ex)
+            {
+                textBox1.AppendText("Nincs kijelölve kimeneti fájl! Próbálja újra miután kijelölte.\r\n");
+            }
+            catch (Exception ex)
+            {
+                textBox1.AppendText(ex.Message);
+            }
 
         }
         private void newfileBtn_Click(object sender, EventArgs e)
@@ -23,17 +62,13 @@ namespace LDS_Feldolgozo
             DialogResult res = dir.ShowDialog();
             if (res == DialogResult.OK) //&& !string.IsNullOrWhiteSpace(dir.SelectedPath)
             {
-                string target = dir.SelectedPath+"\\"+ DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")+".xlsx";
-                ExcelSource.createExcel(target);
-                int mode = 0;
-                mode = sumMode.Checked ? 1 : mode;
-                mode = dayByDayMode.Checked ? 2 : mode;
-                ExcelSource.write(target,mode,doGroups.Checked,doABC.Checked);
-                textBox1.AppendText("Sikeres írás!\r\n");
+                outputPath = dir.SelectedPath;
+                textBox1.AppendText("Kimenet kijelölve.\r\n");
             }
             else
             {
-                MessageBox.Show("Fájl nem lett mentve!");
+                MessageBox.Show("Kimenet nem lett mentve!\r\n");
+                outputPath = "";
             }
         }
         private void readBtn_Click(object sender, EventArgs e)
@@ -48,15 +83,14 @@ namespace LDS_Feldolgozo
             DialogResult res = file.ShowDialog();
             if(res == DialogResult.OK)
             {
-                ExcelSource.read(file.FileName);
-                textBox1.AppendText("Olvasás kész!\r\n");
+                sourceFile = file.FileName;
+                textBox1.AppendText("Olvasára kijelölve.\r\n");
             }
             else
             {
-                MessageBox.Show("Az olvasás nem történt meg!");
+                MessageBox.Show("Az olvasás nem történt meg!\r\n");
+                sourceFile = "";
             }
-
-            
         }
     }
 }
