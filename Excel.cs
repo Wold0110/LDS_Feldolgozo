@@ -17,7 +17,7 @@ namespace LDS_Feldolgozo
         List<Line> lines;
         DateTime to;
         DateTime from;
-
+        
         public ExcelOutput(string target,List<Line> lines,DateTime from,DateTime to)
         {
             trg = new Excel(target);
@@ -88,7 +88,7 @@ namespace LDS_Feldolgozo
 
                 //data
 
-                trg.ws.Cells[2 + shift, 1].Value2 = l.name.Split('\\').TakeLast(1).ToList()[0];
+                trg.ws.Cells[2 + shift, 1].Value2 = l.displayName;
 
                 trg.ws.Cells[4 + shift, 1].Value2 = "Target: " + Math.Round(l.oeeTarget, 2);
                 trg.ws.Cells[4 + shift, 2].Value2 = "Valós: " + Math.Round(l.getOee(), 2);
@@ -108,7 +108,6 @@ namespace LDS_Feldolgozo
                 trg.ws.Cells[10 + shift, 1].Value2 = "áll gnm";
                 trg.ws.Cells[11 + shift, 1].Value2 = "áll k";
                 trg.ws.Cells[12 + shift, 1].Value2 = "hiány";
-
 
                 //downtime
                 trg.ws.Cells[2 + shift, 4].Value2 = "Hiba";
@@ -131,7 +130,7 @@ namespace LDS_Feldolgozo
             {
                 int shift = cycle * 13;
                 trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].Merge();
-                trg.ws.Cells[2 + shift, 1].Value2 = l.name.Split('\\').TakeLast(1).ToList()[0];
+                trg.ws.Cells[2 + shift, 1].Value2 = l.displayName;
                 trg.ws.Cells[2 + shift, 1].HorizontalAlignment = XlHAlign.xlHAlignCenter;
                 trg.ws.Cells[2 + shift, 1].VerticalAlignment = XlVAlign.xlVAlignCenter;
                 trg.ws.Cells[2 + shift, 1].Font.Bold = true;
@@ -216,12 +215,15 @@ namespace LDS_Feldolgozo
             }
         }
         //publikus író függvény, ez megy végig a lineokot és írja ki őket
-        public void Write(int mode, bool doGroup, bool abc)
+        public void Write(int mode, bool doGroup, bool abc,MainForm form)
         {
             /* modes
-            1 sum
-            2 day-by-day
+             * 
+             * 1 sum
+             * 2 day-by-day
+             * 
              */
+            //olvasásra várakozás
 
             #region grouping
             //amennyiben szükséges csoportosítja a sorokat, TODO: 'egyébb' csoport létrehozása
@@ -246,14 +248,14 @@ namespace LDS_Feldolgozo
                         if (groupIndex != -1)
                         {
                             foreach (Line l in lines)
-                                if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
+                                if (String.Compare(l.displayName, name) == 0)
                                     areas[areaIndex].groups[groupIndex].lines.Add(l);
                         }
                         else
                         {
                             Group groupTmp = new Group(group);
                             foreach (Line l in lines)
-                                if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
+                                if (String.Compare(l.displayName, name) == 0)
                                     groupTmp.lines.Add(l);
                             areas[areaIndex].groups.Add(groupTmp);
                         }
@@ -264,13 +266,39 @@ namespace LDS_Feldolgozo
                         Group groupTmp = new Group(group);
 
                         foreach (Line l in lines)
-                            if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
+                            if (String.Compare(l.displayName, name) == 0)
                                 groupTmp.lines.Add(l);
 
                         areaTmp.groups.Add(groupTmp);
                         areas.Add(areaTmp);
                     }
                 }
+
+                // 'egyéb' csoport
+                Area etc = null;
+                foreach (Line l in lines) {
+                    bool found = false;
+                    foreach (Area a in areas)
+                        foreach (Group g in a.groups)
+                            foreach(Line tmp in g.lines)
+                                if(String.Compare(tmp.displayName,l.displayName) == 0)
+                                    found = true;
+                    if (!found)
+                    {
+                        if (etc == null)
+                        {
+                            etc = new Area("Egyéb");
+                            Group groupTmp = new Group("Egyéb");
+                            groupTmp.lines.Add(l);
+                            etc.groups.Add(groupTmp);
+                            areas.Add(etc);
+                        }
+                        else
+                            etc.groups[0].lines.Add(l);
+                    }
+                }
+                if (etc != null)
+                    areas.Add(etc);
             }
             #endregion grouping
             
@@ -335,23 +363,31 @@ namespace LDS_Feldolgozo
                 }
                 else
                 {
-                    lines.Sort((a, b) => a.name.Split('\\').TakeLast(1).ToList()[0].
-                        CompareTo(b.name.Split('\\').TakeLast(1).ToList()[0]));
+                    lines.Sort((a, b) => a.displayName.CompareTo(b.displayName));
                     for (int i = 0; i < lines.Count; i++)
                         printLine(lines[i], mode, i);
                 }
             }
+            MessageBox.Show("Sikeres írás!");
         }
     }
     //olvasó osztály
     internal class ExcelSource
     {
         public List<Line> lines = new List<Line>();
-        public LDSexport src;
+        
+        List<LDSexport> exports = new List<LDSexport>();
+        List<bool> status = new List<bool>();
+        List<Thread> threads = new List<Thread>();
+        
         private string sourcePath;
+        
+        int threadNum = 4;
 
         public DateTime to;
         public DateTime from;
+
+        MainForm form;
         public string path
         {
             get
@@ -365,7 +401,7 @@ namespace LDS_Feldolgozo
             sourcePath = path;
         }
         //egy adott indexű sort olvas ki
-        private bool readProdLine(int i)
+        private bool readProdLine(int i, LDSexport src)
         {
             string name = src.readString(0, 1 + i, src.prod);
             if (name == null)
@@ -401,7 +437,7 @@ namespace LDS_Feldolgozo
             return true;
         }
         //egy adott indexű sort olvas ki
-        private bool readDownLine(int i)
+        private bool readDownLine(int i, LDSexport src)
         {
             string name = src.readString(4, 1 + i, src.downtime);
             if (name == null)
@@ -420,24 +456,75 @@ namespace LDS_Feldolgozo
             return true;
         }
         //publikus olvasó függvény
-        public void Read()
+        private void wait()
         {
-            lines.Clear();
-            from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
-            src = new LDSexport(sourcePath);
             bool running = true;
-            int i = 0;
             while (running)
             {
-                running = running && readProdLine(i); i++;
+                running = false;
+                foreach (bool b in status)
+                    running = running || b;
+                Thread.Sleep(250);
             }
-            running = true;
-            i = 0;
+        }
+        public void Read(MainForm form)
+        {
+            this.form = form;
+
+            lines.Clear();
+
+            from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
+
+            for(int j = 0; j < threadNum; ++j)
+            {
+                status.Add(true);
+                exports.Add(new LDSexport(sourcePath));
+                int x = j;
+                Thread t = new Thread(() => readThreadProd(x));
+                t.Start();
+                threads.Add(t);
+            }
+
+            wait();
+            //MessageBox.Show("prod kész");
+            for (int j = 0; j < threadNum; ++j)
+            {
+                status[j] = true;
+                int x = j;
+                threads[j] = new Thread(() => readThreadDown(x));
+                threads[j].Start();
+            }
+            wait();
+            
+            //MessageBox.Show("down kész");
+            form.wait = false;
+        }
+
+        private void readThreadProd(int threadIndex)
+        {
+            bool running = true;    
+            LDSexport exp = exports[threadIndex];
+            int i = 0 + threadIndex;
             while (running)
             {
-                running = running && readDownLine(i); i++;
+                form.Update("prod");
+                running = running && readProdLine(i,exp); i+=threadNum;
             }
-            src.Close();
+            
+            status[threadIndex] = false;
+        }
+        private void readThreadDown(int threadIndex)
+        {
+            bool running = true;
+            LDSexport exp = exports[threadIndex];
+            int i = 0 + threadIndex;
+            while (running)
+            {
+                form.Update("downtime");
+                running = running && readDownLine(i, exp); i += threadNum;
+            }
+
+            status[threadIndex] = false;
         }
     }
     //standard Excel osztály írásra/olvasásra
@@ -458,7 +545,7 @@ namespace LDS_Feldolgozo
         {
             this.wb = exe.Workbooks.Add(XlWBATemplate.xlWBATWorksheet);
         }
-        private void KillSpecificExcelFileProcess(string excelFileName)
+        public static void KillSpecificExcelFileProcess(string excelFileName)
         {
             try
             {

@@ -37,6 +37,7 @@
             this.dayByDayMode = new System.Windows.Forms.RadioButton();
             this.doGroups = new System.Windows.Forms.CheckBox();
             this.doABC = new System.Windows.Forms.CheckBox();
+            this.statusText = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // okBtn
@@ -81,7 +82,6 @@
             this.sumMode.Name = "sumMode";
             this.sumMode.TabStop = true;
             this.sumMode.UseVisualStyleBackColor = true;
-
             // 
             // dayByDayMode
             // 
@@ -90,7 +90,6 @@
             this.dayByDayMode.Name = "dayByDayMode";
             this.dayByDayMode.TabStop = true;
             this.dayByDayMode.UseVisualStyleBackColor = true;
-
             // 
             // doGroups
             // 
@@ -98,7 +97,6 @@
             this.doGroups.ForeColor = System.Drawing.Color.DarkGreen;
             this.doGroups.Name = "doGroups";
             this.doGroups.UseVisualStyleBackColor = true;
-
             // 
             // doABC
             // 
@@ -107,11 +105,19 @@
             this.doABC.Name = "doABC";
             this.doABC.UseVisualStyleBackColor = true;
             // 
+            // statusText
+            // 
+            resources.ApplyResources(this.statusText, "statusText");
+            this.statusText.BackColor = System.Drawing.Color.Green;
+            this.statusText.ForeColor = System.Drawing.Color.White;
+            this.statusText.Name = "statusText";
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.Controls.Add(this.statusText);
             this.Controls.Add(this.doABC);
             this.Controls.Add(this.doGroups);
             this.Controls.Add(this.dayByDayMode);
@@ -136,5 +142,6 @@
         private RadioButton dayByDayMode;
         private CheckBox doGroups;
         private CheckBox doABC;
+        private TextBox statusText;
     }
 }

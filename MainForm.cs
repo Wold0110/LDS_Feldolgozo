@@ -8,7 +8,7 @@ namespace LDS_Feldolgozo
         public MainForm()
         {
             InitializeComponent();
-
+            Form.CheckForIllegalCrossThreadCalls = false;
             //adatok állítása mert publish után nem minden marad meg
             textBox1.ReadOnly = true;
             dayByDayMode.Text = "Napi lebontás";
@@ -21,6 +21,33 @@ namespace LDS_Feldolgozo
         string sourceFile;
         string outputPath;
 
+        public long count = 0;
+        public bool wait;
+
+        ExcelSource es;
+        ExcelOutput eo;
+        public void Update(string status) {
+            statusText.Text = status +" "+(count++);
+        }
+        private void Wait(string outputFile)
+        {
+            while (wait)
+                Thread.Sleep(250);
+
+            MessageBox.Show("irás kezdõdik");
+            ExcelOutput.createExcel(outputFile);
+            
+            int mode = 0;
+            mode = sumMode.Checked ? 1 : mode;
+            mode = dayByDayMode.Checked ? 2 : mode;
+
+            eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
+            eo.Write(mode, doGroups.Checked, doABC.Checked, this);
+
+            eo.Close();
+            //Close() menti is
+
+        }
         //OK gomb
         private void okBtn_Click(object sender, EventArgs e)
         {
@@ -33,27 +60,17 @@ namespace LDS_Feldolgozo
                     throw new NoExportPathException("Üres string.");
 
                 textBox1.AppendText("Folyamatban...\r\n");
+                
+                wait = true;
+                
                 string outputFile = outputPath + "\\" + 
                     DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".xlsx";
+                
                 //olvasás objektum
-                ExcelSource es = new ExcelSource(sourceFile);
-                es.Read();
+                es = new ExcelSource(sourceFile);
+                new Thread(() => es.Read(this)).Start();
 
-                textBox1.AppendText("Olvasás kést, írás kezdõdik...");
-                //írás objektum
-                ExcelOutput.createExcel(outputFile);
-                ExcelOutput eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
-
-                //mód váltás - szumma vagy napi lebontás
-                int mode = 0;
-                mode = sumMode.Checked ? 1 : mode;
-                mode = dayByDayMode.Checked ? 2 : mode;
-                
-                
-                eo.Write(mode, doGroups.Checked, doABC.Checked);
-                eo.Close();
-                //Close() menti is
-                textBox1.AppendText("Sikeres írás!\r\n");
+                new Thread(() => Wait(outputFile)).Start();
             }
             //egyedi exceptionök
             catch (NoLDSexportException ex)

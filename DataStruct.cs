@@ -29,6 +29,7 @@ namespace LDS_Feldolgozo
      *      Shift 3 (2022-02-01, 3)
      *          ...
      */
+
     //enum az Excelben való színekhez
     public enum LineType
     {
@@ -48,6 +49,14 @@ namespace LDS_Feldolgozo
             shifts = new List<Shift>();
             type = LineType.Line;
         }
+        public string displayName
+        {
+            get
+            {
+                return name.Split('\\').TakeLast(1).ToList()[0];
+            }
+        }
+        
         //előbb be kell adni az összes műszakot a prod táblából
         public void AddShift(double oeeTarget, double sur, Shift s) {
             shifts.Add(s);
