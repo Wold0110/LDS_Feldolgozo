@@ -8,6 +8,28 @@ using _Excel = Microsoft.Office.Interop.Excel;
 
 namespace LDS_Feldolgozo
 {
+    /* objektum tábla felépítése
+     * Line
+     *      Shift 1
+     *          dátum
+     *          shift id (1/2/3) => (de/du/éj)
+     *          oee
+     *          jó
+     *          rossz
+     *          ...
+     *          Downtime 1
+     *              elakadás oka
+     *              idő
+     *          Downtime 2
+     *              ...
+     *          Downtime 3
+     *              ...
+     *      Shift 2 (2022-02-01, 2)
+     *          ...
+     *      Shift 3 (2022-02-01, 3)
+     *          ...
+     */
+    //enum az Excelben való színekhez
     public enum LineType
     {
         Line,
@@ -19,13 +41,14 @@ namespace LDS_Feldolgozo
         public string name;
         public double oeeTarget;
         public double sur;
-        public List<Shift> shifts;
+        public List<Shift> shifts; 
         public LineType type;
         public Line(string name) {
             this.name = name;
             shifts = new List<Shift>();
             type = LineType.Line;
         }
+        //előbb be kell adni az összes műszakot a prod táblából
         public void AddShift(double oeeTarget, double sur, Shift s) {
             shifts.Add(s);
             if (this.oeeTarget == 0)
@@ -33,6 +56,7 @@ namespace LDS_Feldolgozo
             if (this.sur == 0)
                 this.sur = sur;
         }
+        //mután megvannak a műszakok, mehetnek a leállások
         public void AddDowntime(double shift,DateTime date,Downtime dt)
         {
             foreach(Shift s in shifts)
@@ -44,7 +68,8 @@ namespace LDS_Feldolgozo
                 }
             }
         }
-        public static int exits(string name, List<Line> l)
+        //lista tartalmazza-e, ha igen index, ha nem -1
+        public static int Exits(string name, List<Line> l)
         {
             for (int i = 0; i < l.Count; i++)
                 if (String.Compare(l[i].name, name) == 0)
@@ -52,6 +77,7 @@ namespace LDS_Feldolgozo
             return -1;
         }
         #region line_property
+        //tucat metódus az adatok lekérdezéséért, mind második filterrel
         public double getOee()
         {
             double sum = 0;
@@ -61,8 +87,7 @@ namespace LDS_Feldolgozo
                 sum += s.oee > 2 ? s.oee : 0;
                 div += s.oee > 2 ? 1 : 0;
             }
-            if (div == 0) return 0;
-            else return sum / div;
+            return div == 0 ? 0 : sum / div;
         }
         public double getOee(int shift, DateTime date)
         {
@@ -73,8 +98,7 @@ namespace LDS_Feldolgozo
                 sum += s.oee > 2 && s.time.Date == date.Date && s.shiftID == shift ? s.oee : 0;
                 div += s.oee > 2 && s.time.Date == date.Date && s.shiftID == shift ? 1 : 0;
             }
-            if (div == 0) return 0;
-            else return sum / div;
+            return div == 0 ? 0 : sum / div;
         }
         public double getGood()
         {
@@ -122,24 +146,17 @@ namespace LDS_Feldolgozo
         {
             double sum = 0;
             foreach(Shift s in shifts)
-            {
                 foreach(Downtime dt in s.downtimes)
-                {
                     sum += dt.time;
-                }
-            }
+
             return sum;
         }
         public double downtimeG(int shift, DateTime date)
         {
             double sum = 0;
             foreach (Shift s in shifts)
-            {
                 foreach (Downtime dt in s.downtimes)
-                {
                     sum += date.Date == s.time.Date && s.shiftID == shift ? dt.time : 0;
-                }
-            }
             return sum;
         }
         public double getMTBF(int shift, DateTime date)
@@ -165,15 +182,12 @@ namespace LDS_Feldolgozo
                 {
                     c = s.downtimes.Count;
                     foreach(Downtime dt in s.downtimes)
-                    {
                         t += dt.time;
-                    }
                 }
             }
-            if (c == 0)
-                return -2;
-            return (t/60) / c;
+            return c == 0 ? -2 : (t / 60) / 60;
         }
+        //top N darab leállási ok, eltelt idő csökkenő sorrend
         public List<Downtime> topNdowntime(int n)
         {
             List<Downtime> result = new List<Downtime>();

@@ -81,6 +81,7 @@
             this.sumMode.Name = "sumMode";
             this.sumMode.TabStop = true;
             this.sumMode.UseVisualStyleBackColor = true;
+
             // 
             // dayByDayMode
             // 
@@ -89,6 +90,7 @@
             this.dayByDayMode.Name = "dayByDayMode";
             this.dayByDayMode.TabStop = true;
             this.dayByDayMode.UseVisualStyleBackColor = true;
+
             // 
             // doGroups
             // 
@@ -96,6 +98,7 @@
             this.doGroups.ForeColor = System.Drawing.Color.DarkGreen;
             this.doGroups.Name = "doGroups";
             this.doGroups.UseVisualStyleBackColor = true;
+
             // 
             // doABC
             // 

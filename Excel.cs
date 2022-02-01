@@ -12,10 +12,12 @@ namespace LDS_Feldolgozo
 {
     internal class ExcelOutput
     {
+        //globális változók
         Excel trg;
         List<Line> lines;
         DateTime to;
         DateTime from;
+
         public ExcelOutput(string target,List<Line> lines,DateTime from,DateTime to)
         {
             trg = new Excel(target);
@@ -27,12 +29,14 @@ namespace LDS_Feldolgozo
         {
             trg.Close();
         }
+        //statikus függvény, létrehoz egy fájlt
         public static void createExcel(string path)
         {
             Excel res = new Excel();
             res.wb.SaveAs(path);
             res.wb.Close();
         }
+        //@DEPRECATED: adatok ellenőrzésére használt függvény volt, tesztelési célokra bent marad
         public string PrintDemo()
         {
             string res = "";
@@ -47,6 +51,7 @@ namespace LDS_Feldolgozo
             }
             return res;
         }
+        //egy sort ír ki, l -> sor, mode -> bontás/szumma, cycle -> eltolás
         private void printLine(Line l, int mode, int cycle)
         {
             if (mode == 1)
@@ -141,9 +146,6 @@ namespace LDS_Feldolgozo
                         trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].Interior.ColorIndex = 4;
                         break;
                 }
-
-
-
                 trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[12 + shift, 1]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
                 trg.ws.Range[trg.ws.Cells[2 + shift, 1], trg.ws.Cells[2 + shift, 11]].BorderAround(XlLineStyle.xlContinuous, XlBorderWeight.xlThin);
 
@@ -213,6 +215,7 @@ namespace LDS_Feldolgozo
                 }
             }
         }
+        //publikus író függvény, ez megy végig a lineokot és írja ki őket
         public void Write(int mode, bool doGroup, bool abc)
         {
             /* modes
@@ -221,10 +224,11 @@ namespace LDS_Feldolgozo
              */
 
             #region grouping
+            //amennyiben szükséges csoportosítja a sorokat, TODO: 'egyébb' csoport létrehozása
             List<Area> areas = new List<Area>();
             if (doGroup)
             {
-                string[] t = File.ReadAllLines("csoportok.csv", System.Text.Encoding.UTF8);
+                string[] t = File.ReadAllLines("csoportok.csv", Encoding.UTF8);
                 for (int x = 1; x < t.Length; ++x)
                 {
                     string[] tmp = t[x].Split(',');
@@ -235,10 +239,10 @@ namespace LDS_Feldolgozo
                         name += "," + tmp[i];
                     name = name.Substring(1).Replace("\"", "");
 
-                    int areaIndex = Area.exists(area, areas);
+                    int areaIndex = Area.Exists(area, areas);
                     if (areaIndex != -1)
                     {
-                        int groupIndex = Group.exists(group, areas[areaIndex].groups);
+                        int groupIndex = Group.Exists(group, areas[areaIndex].groups);
                         if (groupIndex != -1)
                         {
                             foreach (Line l in lines)
@@ -262,7 +266,6 @@ namespace LDS_Feldolgozo
                         foreach (Line l in lines)
                             if (String.Compare(l.name.Split('\\').TakeLast(1).ToList()[0], name) == 0)
                                 groupTmp.lines.Add(l);
-
 
                         areaTmp.groups.Add(groupTmp);
                         areas.Add(areaTmp);
@@ -319,12 +322,12 @@ namespace LDS_Feldolgozo
                     {
                         if (abc)
                             a.groups.Sort((a, b) => a.name.CompareTo(b.name));
-                        printLine(a.fakeLine(), mode, index++);
+                        printLine(a.FakeLine(), mode, index++);
                         foreach (Group g in a.groups)
                         {
                             if (abc)
                                 g.lines.Sort((a, b) => a.name.CompareTo(b.name));
-                            printLine(g.fakeLine(), mode, index++);
+                            printLine(g.FakeLine(), mode, index++);
                             foreach (Line l in g.lines)
                                 printLine(l, mode, index++);
                         }
@@ -338,9 +341,9 @@ namespace LDS_Feldolgozo
                         printLine(lines[i], mode, i);
                 }
             }
-
         }
     }
+    //olvasó osztály
     internal class ExcelSource
     {
         public List<Line> lines = new List<Line>();
@@ -361,7 +364,7 @@ namespace LDS_Feldolgozo
         {
             sourcePath = path;
         }
-
+        //egy adott indexű sort olvas ki
         private bool readProdLine(int i)
         {
             string name = src.readString(0, 1 + i, src.prod);
@@ -377,7 +380,7 @@ namespace LDS_Feldolgozo
             double oee = src.readDouble(19, 1 + i, src.prod);
             double sur = src.readDouble(20, 1 + i, src.prod);
             double oeeTarget = src.readDouble(24, 1 + i, src.prod);
-            int index = Line.exits(name, lines);
+            int index = Line.Exits(name, lines);
             if (index == -1)
             {
                 //add new
@@ -397,6 +400,7 @@ namespace LDS_Feldolgozo
 
             return true;
         }
+        //egy adott indexű sort olvas ki
         private bool readDownLine(int i)
         {
             string name = src.readString(4, 1 + i, src.downtime);
@@ -410,15 +414,16 @@ namespace LDS_Feldolgozo
                 + Convert.ToDouble(timeArr[1])) * 60) + Convert.ToDouble(timeArr[2]);
             double shift = src.readDouble(0, 1 + i, src.downtime);
             string reason = src.readString(5, 1 + i, src.downtime);
-            int index = Line.exits(name,lines);
+            int index = Line.Exits(name,lines);
             if (index != -1)
                 lines[index].AddDowntime(shift, DateTime.FromOADate(date), new Downtime(reason, timeDouble));
             return true;
         }
+        //publikus olvasó függvény
         public void Read()
         {
             lines.Clear();
-            from = DateTime.Now; //hogy legyen minél kisebb
+            from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
             src = new LDSexport(sourcePath);
             bool running = true;
             int i = 0;
@@ -435,7 +440,7 @@ namespace LDS_Feldolgozo
             src.Close();
         }
     }
-
+    //standard Excel osztály írásra/olvasásra
     internal class Excel
     {
         public _Application exe = new _Excel.Application();
@@ -490,6 +495,7 @@ namespace LDS_Feldolgozo
             ws.Cells[y + 1, x + 1].value2 = value;
         }
     }
+    //specializált LDS export olvasó osztály, jövőben cserélhető lenne egy SQL kapcsolatra.
     internal class LDSexport {
         string path;
         _Application exe = new _Excel.Application();
@@ -515,7 +521,7 @@ namespace LDS_Feldolgozo
         {
             wb.Close(0);
             exe.Quit();
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(exe);
+            Marshal.ReleaseComObject(exe);
         }
         public string readString(int x, int y, Worksheet ws)
         {

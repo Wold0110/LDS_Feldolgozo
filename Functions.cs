@@ -8,6 +8,7 @@ namespace LDS_Feldolgozo
 {
     internal class Functions
     {
+        //másodpercet alakít formázott stringé
         public static string secToString(double time)
         {
             double h = Math.Floor(time / 3600);
@@ -30,6 +31,7 @@ namespace LDS_Feldolgozo
 
             return value;
         }
+        //percet alakít formázott stringé
         public static string minToString(double time)
         {
             double h = Math.Floor(time / 60);
