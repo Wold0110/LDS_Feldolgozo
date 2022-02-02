@@ -33,8 +33,10 @@ namespace LDS_Feldolgozo
         {
             while (wait) {
                 Thread.Sleep(1000);
-                if (!closing)
+                if (closing)
+                {
                     wait = false;
+                }
             }
             if (!closing) { 
                 textBox1.AppendText("Írás kezdetét vette...\r\n");
@@ -43,10 +45,8 @@ namespace LDS_Feldolgozo
                 int mode = 0;
                 mode = sumMode.Checked ? 1 : mode;
                 mode = dayByDayMode.Checked ? 2 : mode;
-
                 eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
                 eo.Write(mode, doGroups.Checked, doABC.Checked, this);
-
                 eo.Close();
                 //Close() menti is
             }
@@ -140,6 +140,7 @@ namespace LDS_Feldolgozo
             //close event
             //KILLALL
             closing = true;
+            textBox1.AppendText("Bezárás folyamatban.\r\n");
             Excel.KillSpecificExcelFileProcess("");
         }
     }

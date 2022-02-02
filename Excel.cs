@@ -218,6 +218,8 @@ namespace LDS_Feldolgozo
         //publikus író függvény, ez megy végig a lineokot és írja ki őket
         public void Write(int mode, bool doGroup, bool abc, MainForm form)
         {
+            
+            //MessageBox.Show("write "+mode+" "+lines.Count);
             /* modes
              * 
              * 1 sum
@@ -225,6 +227,7 @@ namespace LDS_Feldolgozo
              * 
              */
             this.form = form;
+
             this.form.statusText.Hide();
             this.form.progressBar.Show();
             this.form.progressBar.Minimum = 0;
@@ -301,6 +304,7 @@ namespace LDS_Feldolgozo
                             etc.groups[0].lines.Add(l);
                     }
                 }
+
                 if (etc != null)
                     areas.Add(etc);
                 //üres group/area törlése
@@ -326,9 +330,10 @@ namespace LDS_Feldolgozo
                 }
                 foreach (Area a in areas)
                     max += 1 + a.groups.Count;
-
-                #endregion grouping
-
+            }
+            #endregion grouping
+            
+            
             #region setup
             //sum
             trg.ws.Cells.Clear();
@@ -391,17 +396,18 @@ namespace LDS_Feldolgozo
                 }
                 else
                 {
-                    lines.Sort((a, b) => a.displayName.CompareTo(b.displayName));
+                    if (abc)
+                        lines.Sort((a, b) => a.displayName.CompareTo(b.displayName));
                     for (int i = 0; i < lines.Count; i++)
                         printLine(lines[i], mode, i);
                 }
             }
             this.form.statusText.Show();
-            this.form.statusText.Text = "";
             this.form.progressBar.Hide();
+            this.form.statusText.Text = "";
             this.form.textBox1.AppendText("Írás kész!\r\n");
 
-            }
+
         }
     }
     //olvasó osztály
@@ -529,7 +535,7 @@ namespace LDS_Feldolgozo
                 wait(!form.closing);
                 form.wait = false;
             }
-            catch{}
+            catch{ form.statusText.Text = "error"; }
         }
 
         private void readThreadProd(int threadIndex)
