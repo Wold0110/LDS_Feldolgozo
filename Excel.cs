@@ -412,8 +412,11 @@ namespace LDS_Feldolgozo
         List<LDSexport> exports = new List<LDSexport>();
         List<bool> status = new List<bool>();
         List<Thread> threads = new List<Thread>();
-        private string sourcePath;
         int threadNum = 4;
+
+        private string sourcePath;
+
+        
         public DateTime to;
         public DateTime from;
 
@@ -425,7 +428,6 @@ namespace LDS_Feldolgozo
                 return sourcePath;
             }
         }
-
         public ExcelSource(string path)
         {
             sourcePath = path;
@@ -433,38 +435,42 @@ namespace LDS_Feldolgozo
         //egy adott indexű sort olvas ki
         private bool readProdLine(int i, LDSexport src)
         {
-            string name = src.readString(0, 1 + i, src.prod);
-            if (name == null)
-                return false;
-            double date = src.readDouble(3, 1 + i, src.prod);
-            double shift = src.readDouble(4, 1 + i, src.prod);
-            double runtime = src.readDouble(7, 1 + i, src.prod);
-            double good = src.readDouble(10, 1 + i, src.prod);
-            double repair = src.readDouble(11, 1 + i, src.prod);
-            double bad = src.readDouble(12, 1 + i, src.prod);
-            double scrap = src.readDouble(13, 1 + i, src.prod);
-            double oee = src.readDouble(19, 1 + i, src.prod);
-            double sur = src.readDouble(20, 1 + i, src.prod);
-            double oeeTarget = src.readDouble(24, 1 + i, src.prod);
-            int index = Line.Exits(name, lines);
-            if (index == -1)
+            try
             {
-                //add new
-                Line tmp = new Line(name);
-                tmp.AddShift(oeeTarget, sur,
-                    new Shift(shift, DateTime.FromOADate(date), oee, good, bad, runtime));
-                lines.Add(tmp);
-            }
-            else
-            {
-                //append
-                lines[index].AddShift(oeeTarget, sur,
-                    new Shift(shift, DateTime.FromOADate(date), oee, good, bad, runtime));
-            }
-            to = DateTime.FromOADate(date) > to ? DateTime.FromOADate(date) : to;
-            from = DateTime.FromOADate(date) < from ? DateTime.FromOADate(date) : from;
+                string name = src.readString(0, 1 + i, src.prod);
+                if (name == null)
+                    return false;
+                double date = src.readDouble(3, 1 + i, src.prod);
+                double shift = src.readDouble(4, 1 + i, src.prod);
+                double runtime = src.readDouble(7, 1 + i, src.prod);
+                double good = src.readDouble(10, 1 + i, src.prod);
+                double repair = src.readDouble(11, 1 + i, src.prod);
+                double bad = src.readDouble(12, 1 + i, src.prod);
+                double scrap = src.readDouble(13, 1 + i, src.prod);
+                double oee = src.readDouble(19, 1 + i, src.prod);
+                double sur = src.readDouble(20, 1 + i, src.prod);
+                double oeeTarget = src.readDouble(24, 1 + i, src.prod);
+                int index = Line.Exits(name, lines);
+                if (index == -1)
+                {
+                    //add new
+                    Line tmp = new Line(name);
+                    tmp.AddShift(oeeTarget, sur,
+                        new Shift(shift, DateTime.FromOADate(date), oee, good, bad, runtime));
+                    lines.Add(tmp);
+                }
+                else
+                {
+                    //append
+                    lines[index].AddShift(oeeTarget, sur,
+                        new Shift(shift, DateTime.FromOADate(date), oee, good, bad, runtime));
+                }
+                to = DateTime.FromOADate(date) > to ? DateTime.FromOADate(date) : to;
+                from = DateTime.FromOADate(date) < from ? DateTime.FromOADate(date) : from;
 
-            return true;
+                return true;
+            }
+            catch(ExitClose ex) { throw new ExitClose(); }
         }
         //egy adott indexű sort olvas ki
         private bool readDownLine(int i, LDSexport src)
@@ -486,55 +492,62 @@ namespace LDS_Feldolgozo
             return true;
         }
         //publikus olvasó függvény
-        private void wait()
+        private void wait(bool running)
         {
-            bool running = true;
             while (running)
             {
                 running = false;
                 foreach (bool b in status)
                     running = running || b;
-                Thread.Sleep(250);
+                Thread.Sleep(1000);
             }
         }
         public void Read(MainForm form)
         {
-            this.form = form;
-            lines.Clear();
-            from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
-            for(int j = 0; j < threadNum; ++j)
+            try
             {
-                status.Add(true);
-                exports.Add(new LDSexport(sourcePath));
-                int x = j;
-                Thread t = new Thread(() => readThreadProd(x));
-                t.Start();
-                threads.Add(t);
+                this.form = form;
+                lines.Clear();
+                from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
+                for (int j = 0; j < threadNum && !form.closing; ++j)
+                {
+                    status.Add(true);
+                    exports.Add(new LDSexport(sourcePath));
+                    int x = j;
+                    Thread t = new Thread(() => readThreadProd(x));
+                    t.Start();
+                    threads.Add(t);
+                }
+                wait(!form.closing);
+                for (int j = 0; j < threadNum && !form.closing; ++j)
+                {
+                    status[j] = true;
+                    int x = j;
+                    threads[j] = new Thread(() => readThreadDown(x));
+                    threads[j].Start();
+                }
+                wait(!form.closing);
+                form.wait = false;
             }
-            wait();
-            for (int j = 0; j < threadNum; ++j)
-            {
-                status[j] = true;
-                int x = j;
-                threads[j] = new Thread(() => readThreadDown(x));
-                threads[j].Start();
-            }
-            wait();
-            form.wait = false;
+            catch{}
         }
 
         private void readThreadProd(int threadIndex)
         {
-            bool running = true;    
-            LDSexport exp = exports[threadIndex];
-            int i = 0 + threadIndex;
-            while (running)
+            try
             {
-                form.Update("prod");
-                running = running && readProdLine(i,exp); i+=threadNum;
+                bool running = true;
+                LDSexport exp = exports[threadIndex];
+                int i = 0 + threadIndex;
+                while (running)
+                {
+                    form.Update("prod");
+                    running = running && readProdLine(i, exp); i += threadNum;
+                }
+
+                status[threadIndex] = false;
             }
-            
-            status[threadIndex] = false;
+            catch(ExitClose ex) {}
         }
         private void readThreadDown(int threadIndex)
         {
@@ -635,11 +648,16 @@ namespace LDS_Feldolgozo
         }
         public string readString(int x, int y, Worksheet ws)
         {
-            return ws.Cells[y + 1, x + 1].Value2;
+            try { return ws.Cells[y + 1, x + 1].Value2; }
+            catch { throw new ExitClose(); }
         }
         public double readDouble(int x, int y, Worksheet ws)
         {
-            return ws.Cells[y + 1, x + 1].Value2;
+            try
+            {
+                return ws.Cells[y + 1, x + 1].Value2;
+            }
+            catch { throw new ExitClose(); }
         }
     }
 }

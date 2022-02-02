@@ -24,26 +24,32 @@ namespace LDS_Feldolgozo
 
         public long count = 0;
         public bool wait;
-
+        public bool closing = false;
         ExcelSource es;
         ExcelOutput eo;
+        Thread writeThread;
         public void Update(string status) {statusText.Text = status +" "+(count++);}
         private void Wait(string outputFile)
         {
-            while (wait)
-                Thread.Sleep(250);
+            while (wait) {
+                Thread.Sleep(1000);
+                if (!closing)
+                    wait = false;
+            }
+            if (!closing) { 
+                textBox1.AppendText("Írás kezdetét vette...\r\n");
+                ExcelOutput.createExcel(outputFile);
+                
+                int mode = 0;
+                mode = sumMode.Checked ? 1 : mode;
+                mode = dayByDayMode.Checked ? 2 : mode;
 
-            textBox1.AppendText("Írás kezdetét vette...\r\n");
-            ExcelOutput.createExcel(outputFile);
-            int mode = 0;
-            mode = sumMode.Checked ? 1 : mode;
-            mode = dayByDayMode.Checked ? 2 : mode;
+                eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
+                eo.Write(mode, doGroups.Checked, doABC.Checked, this);
 
-            eo = new ExcelOutput(outputFile, es.lines, es.from, es.to);
-            eo.Write(mode, doGroups.Checked, doABC.Checked, this);
-
-            eo.Close();
-            //Close() menti is
+                eo.Close();
+                //Close() menti is
+            }
         }
         //OK gomb
         private void okBtn_Click(object sender, EventArgs e)
@@ -67,7 +73,8 @@ namespace LDS_Feldolgozo
                 es = new ExcelSource(sourceFile);
                 new Thread(() => es.Read(this)).Start();
 
-                new Thread(() => Wait(outputFile)).Start();
+                writeThread = new Thread(() => Wait(outputFile));
+                writeThread.Start();
             }
             //egyedi exceptionök
             catch (NoLDSexportException ex)
@@ -77,6 +84,10 @@ namespace LDS_Feldolgozo
             catch (NoExportPathException ex)
             {
                 textBox1.AppendText("Nincs kijelölve kimeneti fájl! Próbálja újra miután kijelölte.\r\n");
+            }
+            catch(ThreadAbortException ex)
+            {
+
             }
             catch (Exception ex)
             {
@@ -122,6 +133,14 @@ namespace LDS_Feldolgozo
                 textBox1.AppendText("Az olvasás nem történt meg!\r\n");
                 sourceFile = "";
             }
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            //close event
+            //KILLALL
+            closing = true;
+            Excel.KillSpecificExcelFileProcess("");
         }
     }
 }

@@ -135,6 +135,7 @@
             this.Controls.Add(this.readBtn);
             this.Controls.Add(this.okBtn);
             this.Name = "MainForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

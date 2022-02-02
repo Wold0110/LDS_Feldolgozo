@@ -18,4 +18,8 @@ namespace LDS_Feldolgozo
         public NoExportPathException(string message) : base(message) { }
         public NoExportPathException(string message,Exception inner) : base(message, inner) { }
     }
+    public class ExitClose : Exception
+    {
+        public ExitClose() { }
+    }
 }
