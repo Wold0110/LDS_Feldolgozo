@@ -40,6 +40,8 @@
             this.statusText = new System.Windows.Forms.TextBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.doFilter = new System.Windows.Forms.CheckBox();
+            this.settingsBtn = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.settingsBtn)).BeginInit();
             this.SuspendLayout();
             // 
             // okBtn
@@ -128,11 +130,19 @@
             this.doFilter.Name = "doFilter";
             this.doFilter.UseVisualStyleBackColor = true;
             // 
+            // settingsBtn
+            // 
+            resources.ApplyResources(this.settingsBtn, "settingsBtn");
+            this.settingsBtn.Name = "settingsBtn";
+            this.settingsBtn.TabStop = false;
+            this.settingsBtn.Click += new System.EventHandler(this.settingsBtn_Click);
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.Controls.Add(this.settingsBtn);
             this.Controls.Add(this.doFilter);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.statusText);
@@ -146,6 +156,7 @@
             this.Controls.Add(this.okBtn);
             this.Name = "MainForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            ((System.ComponentModel.ISupportInitialize)(this.settingsBtn)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -165,5 +176,6 @@
         public TextBox statusText;
         public ProgressBar progressBar;
         private CheckBox doFilter;
+        private PictureBox settingsBtn;
     }
 }

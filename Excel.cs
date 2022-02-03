@@ -466,7 +466,7 @@ namespace LDS_Feldolgozo
         List<LDSexport> exports = new List<LDSexport>();
         List<bool> status = new List<bool>();
         List<Thread> threads = new List<Thread>();
-        int threadNum = 1;
+        int threadNum = SettingsForm.threadNum;
 
         private string sourcePath;
         

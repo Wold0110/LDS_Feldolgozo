@@ -6,11 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>se.ico</ApplicationIcon>
+    <ApplicationIcon>img\se.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="csoportok.csv" />
+    <None Remove="settings.cfg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,17 +27,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="se.ico" />
+    <Content Include="img\se.ico" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="csoportok.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="settings.cfg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="img\" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

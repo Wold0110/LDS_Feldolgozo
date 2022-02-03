@@ -38,14 +38,14 @@
             // 
             this.fromDate.Location = new System.Drawing.Point(12, 24);
             this.fromDate.Name = "fromDate";
-            this.fromDate.Size = new System.Drawing.Size(200, 23);
+            this.fromDate.Size = new System.Drawing.Size(242, 23);
             this.fromDate.TabIndex = 0;
             // 
             // toDate
             // 
             this.toDate.Location = new System.Drawing.Point(12, 67);
             this.toDate.Name = "toDate";
-            this.toDate.Size = new System.Drawing.Size(200, 23);
+            this.toDate.Size = new System.Drawing.Size(242, 23);
             this.toDate.TabIndex = 1;
             // 
             // okBtn
@@ -54,7 +54,7 @@
             this.okBtn.ForeColor = System.Drawing.Color.White;
             this.okBtn.Location = new System.Drawing.Point(12, 105);
             this.okBtn.Name = "okBtn";
-            this.okBtn.Size = new System.Drawing.Size(200, 31);
+            this.okBtn.Size = new System.Drawing.Size(242, 31);
             this.okBtn.TabIndex = 2;
             this.okBtn.Text = "Ok";
             this.okBtn.UseVisualStyleBackColor = false;
@@ -65,13 +65,13 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(227, 160);
+            this.ClientSize = new System.Drawing.Size(266, 160);
             this.Controls.Add(this.okBtn);
             this.Controls.Add(this.toDate);
             this.Controls.Add(this.fromDate);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "DatePickers";
-            this.Text = "Dátum";
+            this.Text = "Időtartam választó";
             this.ResumeLayout(false);
 
         }

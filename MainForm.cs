@@ -6,6 +6,8 @@ namespace LDS_Feldolgozo
         {
             InitializeComponent();
             Form.CheckForIllegalCrossThreadCalls = false;
+
+            SettingsForm.Init();
             //adatok állítása mert publish után nem minden marad meg
             //textBox1.ReadOnly = true;
             //dayByDayMode.Text = "Napi lebontás";
@@ -124,6 +126,12 @@ namespace LDS_Feldolgozo
             closing = true;
             textBox1.AppendText("Bezárás folyamatban.\r\n");
             Excel.KillSpecificExcelFileProcess("");
+        }
+
+        private void settingsBtn_Click(object sender, EventArgs e)
+        {
+            SettingsForm settings = new SettingsForm();
+            settings.ShowDialog();
         }
     }
 }

@@ -96,7 +96,7 @@
             this.HelpButton = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FilterForm";
-            this.Text = "FilterForm";
+            this.Text = "Sor filter";
             this.ResumeLayout(false);
 
         }
