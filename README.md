@@ -8,15 +8,15 @@ Feldolgozza az LDS-ből kiexportált Excel fájlokat, és egy máshogy formázot
 
 Változtatások:
 
-**0.1 2022-01-31**
+**2022-01-31 0.1**
 > * olvasás
 > * írás
 > kb működik
 
-**0.2 2022-02-02**
+**2022-02-02 0.2**
 > * több szállal olvas
 > * kiírás több módon talán bug nélkül
 > * felhasználó barátabb
 
-**0.2.2 2022-02-03**
+**2022-02-03 0.2.2**
 > * filterezés
