@@ -1,4 +1,4 @@
-**Jelenlegi verzió: 0.2.2**
+**Jelenlegi verzió: 0.2.3**
 
 Feldolgozza az LDS-ből kiexportált Excel fájlokat, és egy máshogy formázott Excelfájlt csinál.
 
@@ -18,5 +18,6 @@ Változtatások:
 > * kiírás több módon talán bug nélkül
 > * felhasználó barátabb
 
-**2022-02-03 0.2.2**
+**2022-02-03 0.2.3**
 > * filterezés
+> * beállítások
