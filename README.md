@@ -1,5 +1,7 @@
 **Jelenlegi verzió: 0.2.3**
 
+**.NET Core 6.0 LTS**
+
 Feldolgozza az LDS-ből kiexportált Excel fájlokat, és egy máshogy formázott Excelfájlt csinál.
 
 <p align="center">
