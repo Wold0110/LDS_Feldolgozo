@@ -39,6 +39,7 @@
             this.doABC = new System.Windows.Forms.CheckBox();
             this.statusText = new System.Windows.Forms.TextBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.doFilter = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // okBtn
@@ -74,6 +75,7 @@
             this.textBox1.BackColor = System.Drawing.Color.Green;
             this.textBox1.ForeColor = System.Drawing.Color.White;
             this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
             // 
             // sumMode
             // 
@@ -119,11 +121,19 @@
             resources.ApplyResources(this.progressBar, "progressBar");
             this.progressBar.Name = "progressBar";
             // 
+            // doFilter
+            // 
+            resources.ApplyResources(this.doFilter, "doFilter");
+            this.doFilter.ForeColor = System.Drawing.Color.DarkGreen;
+            this.doFilter.Name = "doFilter";
+            this.doFilter.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.Controls.Add(this.doFilter);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.statusText);
             this.Controls.Add(this.doABC);
@@ -154,5 +164,6 @@
         public TextBox textBox1;
         public TextBox statusText;
         public ProgressBar progressBar;
+        private CheckBox doFilter;
     }
 }

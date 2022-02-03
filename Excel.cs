@@ -14,7 +14,7 @@ namespace LDS_Feldolgozo
     {
         //globális változók
         Excel trg;
-        List<Line> lines;
+        List<Line> linesInput;
         DateTime to;
         DateTime from;
         MainForm form;
@@ -23,7 +23,7 @@ namespace LDS_Feldolgozo
             trg = new Excel(target);
             this.to = to;
             this.from = from;
-            this.lines = lines;
+            this.linesInput = lines;
         }
         public void Close()
         {
@@ -37,7 +37,7 @@ namespace LDS_Feldolgozo
             res.wb.Close();
         }
         //@DEPRECATED: adatok ellenőrzésére használt függvény volt, tesztelési célokra bent marad
-        public string PrintDemo()
+        public string PrintDemo(List<Line> lines)
         {
             string res = "";
             foreach (Line l in lines)
@@ -216,9 +216,9 @@ namespace LDS_Feldolgozo
             }
         }
         //publikus író függvény, ez megy végig a lineokot és írja ki őket
-        public void Write(int mode, bool doGroup, bool abc, MainForm form)
+        public void Write(int mode, bool doGroup, bool abc,bool doFilter, MainForm form)
         {
-            
+
             //MessageBox.Show("write "+mode+" "+lines.Count);
             /* modes
              * 
@@ -226,8 +226,20 @@ namespace LDS_Feldolgozo
              * 2 day-by-day
              * 
              */
-            this.form = form;
 
+            List<Line> lines;
+            if (doFilter)
+            {
+                FilterForm ff = new FilterForm(linesInput);
+                ff.ShowDialog();
+                lines = ff.Result;
+            }
+            else
+            {
+                lines = linesInput;
+            }
+
+            this.form = form;
             this.form.statusText.Hide();
             this.form.progressBar.Show();
             this.form.progressBar.Minimum = 0;
@@ -256,15 +268,23 @@ namespace LDS_Feldolgozo
                         if (groupIndex != -1)
                         {
                             foreach (Line l in lines)
+                            {
                                 if (String.Compare(l.displayName, name) == 0)
+                                {
                                     areas[areaIndex].groups[groupIndex].lines.Add(l);
+                                }
+                            }
                         }
                         else
                         {
                             Group groupTmp = new Group(group);
                             foreach (Line l in lines)
+                            {
                                 if (String.Compare(l.displayName, name) == 0)
+                                {
                                     groupTmp.lines.Add(l);
+                                }
+                            }
                             areas[areaIndex].groups.Add(groupTmp);
                         }
                     }
@@ -273,8 +293,12 @@ namespace LDS_Feldolgozo
                         Area areaTmp = new Area(area);
                         Group groupTmp = new Group(group);
                         foreach (Line l in lines)
+                        {
                             if (String.Compare(l.displayName, name) == 0)
+                            {
                                 groupTmp.lines.Add(l);
+                            }
+                        }
                         areaTmp.groups.Add(groupTmp);
                         areas.Add(areaTmp);
                     }
@@ -286,10 +310,18 @@ namespace LDS_Feldolgozo
                 {
                     bool found = false;
                     foreach (Area a in areas)
+                    {
                         foreach (Group g in a.groups)
+                        {
                             foreach (Line tmp in g.lines)
+                            {
                                 if (String.Compare(tmp.displayName, l.displayName) == 0)
+                                {
                                     found = true;
+                                }
+                            }
+                        }
+                    }
                     if (!found)
                     {
                         if (etc == null)
@@ -301,12 +333,16 @@ namespace LDS_Feldolgozo
                             areas.Add(etc);
                         }
                         else
+                        {
                             etc.groups[0].lines.Add(l);
+                        }
                     }
                 }
 
                 if (etc != null)
+                {
                     areas.Add(etc);
+                }
                 //üres group/area törlése
                 for (int x = 0; x < areas.Count; ++x)
                 {
@@ -329,7 +365,9 @@ namespace LDS_Feldolgozo
                     }
                 }
                 foreach (Area a in areas)
+                {
                     max += 1 + a.groups.Count;
+                }
             }
             #endregion grouping
             
@@ -341,7 +379,9 @@ namespace LDS_Feldolgozo
             {
                 trg.ws.Cells.Font.Size = 11;
                 for (int i = 1; i < 3; i++)
+                {
                     trg.ws.Columns[i].ColumnWidth = 15;
+                }
                 trg.ws.Columns[3].ColumnWidth = 5;
 
                 trg.ws.Columns[4].ColumnWidth = 40;
@@ -382,32 +422,40 @@ namespace LDS_Feldolgozo
                     foreach (Area a in areas)
                     {
                         if (abc)
+                        {
                             a.groups.Sort((a, b) => a.name.CompareTo(b.name));
+                        }
                         printLine(a.FakeLine(), mode, index++);
                         foreach (Group g in a.groups)
                         {
                             if (abc)
+                            {
                                 g.lines.Sort((a, b) => a.name.CompareTo(b.name));
+                            }
                             printLine(g.FakeLine(), mode, index++);
                             foreach (Line l in g.lines)
+                            {
                                 printLine(l, mode, index++);
+                            }
                         }
                     }
                 }
                 else
                 {
                     if (abc)
+                    {
                         lines.Sort((a, b) => a.displayName.CompareTo(b.displayName));
+                    }
                     for (int i = 0; i < lines.Count; i++)
+                    {
                         printLine(lines[i], mode, i);
+                    }
                 }
             }
             this.form.statusText.Show();
             this.form.progressBar.Hide();
             this.form.statusText.Text = "";
             this.form.textBox1.AppendText("Írás kész!\r\n");
-
-
         }
     }
     //olvasó osztály
@@ -418,10 +466,9 @@ namespace LDS_Feldolgozo
         List<LDSexport> exports = new List<LDSexport>();
         List<bool> status = new List<bool>();
         List<Thread> threads = new List<Thread>();
-        int threadNum = 4;
+        int threadNum = 1;
 
         private string sourcePath;
-
         
         public DateTime to;
         public DateTime from;

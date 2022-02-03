@@ -80,7 +80,7 @@
     <value>Kimeneti mappa kiválasztása</value>
   </data>
   <data name="textBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>262, 226</value>
+    <value>318, 248</value>
   </data>
   <data name="sumMode.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 173</value>
@@ -124,19 +124,43 @@
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="statusText.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="statusText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>160, 266</value>
   </data>
   <data name="statusText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>262, 23</value>
+    <value>318, 23</value>
+  </data>
+  <data name="progressBar.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
   </data>
   <data name="progressBar.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <data name="progressBar.Location" type="System.Drawing.Point, System.Drawing">
+    <value>160, 266</value>
+  </data>
   <data name="progressBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>262, 23</value>
+    <value>318, 23</value>
+  </data>
+  <data name="doFilter.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="doFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 273</value>
+  </data>
+  <data name="doFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 19</value>
+  </data>
+  <data name="doFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="doFilter.Text" xml:space="preserve">
+    <value>Filterezés</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>434, 279</value>
+    <value>490, 301</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
