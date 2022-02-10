@@ -23,3 +23,6 @@ Változtatások:
 **2022-02-03 0.2.3**
 > * filterezés
 > * beállítások
+
+**2022-02-10 0.2.3.1**
+> * megjelenési hiba javítva
