@@ -46,27 +46,27 @@
             // 
             // okBtn
             // 
-            resources.ApplyResources(this.okBtn, "okBtn");
             this.okBtn.BackColor = System.Drawing.Color.ForestGreen;
             this.okBtn.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            resources.ApplyResources(this.okBtn, "okBtn");
             this.okBtn.Name = "okBtn";
             this.okBtn.UseVisualStyleBackColor = false;
             this.okBtn.Click += new System.EventHandler(this.okBtn_Click);
             // 
             // readBtn
             // 
-            resources.ApplyResources(this.readBtn, "readBtn");
             this.readBtn.BackColor = System.Drawing.Color.ForestGreen;
             this.readBtn.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            resources.ApplyResources(this.readBtn, "readBtn");
             this.readBtn.Name = "readBtn";
             this.readBtn.UseVisualStyleBackColor = false;
             this.readBtn.Click += new System.EventHandler(this.readBtn_Click);
             // 
             // newfileBtn
             // 
-            resources.ApplyResources(this.newfileBtn, "newfileBtn");
             this.newfileBtn.BackColor = System.Drawing.Color.ForestGreen;
             this.newfileBtn.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            resources.ApplyResources(this.newfileBtn, "newfileBtn");
             this.newfileBtn.Name = "newfileBtn";
             this.newfileBtn.UseVisualStyleBackColor = false;
             this.newfileBtn.Click += new System.EventHandler(this.newfileBtn_Click);
@@ -90,23 +90,23 @@
             // 
             // dayByDayMode
             // 
-            resources.ApplyResources(this.dayByDayMode, "dayByDayMode");
             this.dayByDayMode.ForeColor = System.Drawing.Color.DarkGreen;
+            resources.ApplyResources(this.dayByDayMode, "dayByDayMode");
             this.dayByDayMode.Name = "dayByDayMode";
             this.dayByDayMode.TabStop = true;
             this.dayByDayMode.UseVisualStyleBackColor = true;
             // 
             // doGroups
             // 
-            resources.ApplyResources(this.doGroups, "doGroups");
             this.doGroups.ForeColor = System.Drawing.Color.DarkGreen;
+            resources.ApplyResources(this.doGroups, "doGroups");
             this.doGroups.Name = "doGroups";
             this.doGroups.UseVisualStyleBackColor = true;
             // 
             // doABC
             // 
-            resources.ApplyResources(this.doABC, "doABC");
             this.doABC.ForeColor = System.Drawing.Color.DarkGreen;
+            resources.ApplyResources(this.doABC, "doABC");
             this.doABC.Name = "doABC";
             this.doABC.UseVisualStyleBackColor = true;
             // 
@@ -125,14 +125,16 @@
             // 
             // doFilter
             // 
-            resources.ApplyResources(this.doFilter, "doFilter");
             this.doFilter.ForeColor = System.Drawing.Color.DarkGreen;
+            resources.ApplyResources(this.doFilter, "doFilter");
             this.doFilter.Name = "doFilter";
             this.doFilter.UseVisualStyleBackColor = true;
             // 
             // settingsBtn
             // 
             resources.ApplyResources(this.settingsBtn, "settingsBtn");
+            this.settingsBtn.BackColor = System.Drawing.Color.Transparent;
+            this.settingsBtn.Image = global::LDS_Feldolgozo.Properties.Resources.cogwheel;
             this.settingsBtn.Name = "settingsBtn";
             this.settingsBtn.TabStop = false;
             this.settingsBtn.Click += new System.EventHandler(this.settingsBtn_Click);
