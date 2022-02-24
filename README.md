@@ -5,7 +5,9 @@
 Feldolgozza az LDS-ből kiexportált Excel fájlokat, és egy máshogy formázott Excelfájlt csinál.
 
 <p align="center">
-  <img width="460" height="300" src="https://github.com/Wold0110/LDS_Feldolgozo/blob/master/img/mainform.png?raw=true">
+  <a href="https://github.com/Wold0110/LDS_Feldolgozo/releases" title="Letöltés" alt="Letöltés">
+    <img width="460" height="300" src="https://github.com/Wold0110/LDS_Feldolgozo/blob/master/img/mainform.png?raw=true">
+  </a>
 </p>
 
 Változtatások:
