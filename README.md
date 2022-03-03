@@ -28,5 +28,6 @@ Változtatások:
 
 **2022-02-10 0.2.3.1**
 > * megjelenési hiba javítva
+
 **2022-03-03 0.2.3.2**
 > * Excel bezárási hiba javítva
