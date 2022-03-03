@@ -580,6 +580,11 @@ namespace LDS_Feldolgozo
                     threads[j].Start();
                 }
                 wait(!form.closing);
+                //close
+                foreach(var x in exports)
+                {
+                    x.Close();
+                }
                 form.wait = false;
             }
             catch{ form.statusText.Text = "error"; }
