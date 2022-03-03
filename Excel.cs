@@ -18,12 +18,14 @@ namespace LDS_Feldolgozo
         DateTime to;
         DateTime from;
         MainForm form;
-        public ExcelOutput(string target, List<Line> lines, DateTime from, DateTime to)
+        public ExcelOutput(string target, List<Line> lines, DateTime from, DateTime to, MainForm form)
         {
             trg = new Excel(target);
             this.to = to;
             this.from = from;
             this.linesInput = lines;
+
+            this.form = form;
         }
         public void Close()
         {
@@ -174,7 +176,7 @@ namespace LDS_Feldolgozo
                         trg.ws.Cells[6 + shift, 2 + x + k].Value2 = l.getGood(k + 1, i);
                         trg.ws.Cells[7 + shift, 2 + x + k].Value2 = l.getBad(k + 1, i);
                         double mtbf = l.getMTBF(k + 1, i);
-                        string mtbfString = "*MTBF*";
+                        string mtbfString;
                         switch (mtbf)
                         {
                             case -1:
@@ -188,7 +190,7 @@ namespace LDS_Feldolgozo
                                 break;
                         }
                         double mttr = l.getMTTR(k + 1, i);
-                        string mttrString = "*MTTR*";
+                        string mttrString;
                         switch (mttr)
                         {
                             case -2:
@@ -203,7 +205,7 @@ namespace LDS_Feldolgozo
                         trg.ws.Cells[9 + shift, 2 + x + k].Value2 = mtbfString; //MTBF - Mean time between failures
                         trg.ws.Cells[9 + shift, 2 + x + k].HorizontalAlignment = XlHAlign.xlHAlignFill;
 
-                        List<Downtime> dtl = new List<Downtime>();
+                        List<Downtime> dtl;
                         dtl = l.topNdowntime(3, k + 1, i);
                         for (int y = 0; y < Math.Min(dtl.Count, 3); ++y)
                         {
@@ -216,7 +218,7 @@ namespace LDS_Feldolgozo
             }
         }
         //publikus író függvény, ez megy végig a lineokot és írja ki őket
-        public void Write(int mode, bool doGroup, bool abc,bool doFilter, MainForm form)
+        public void Write(int mode, bool doGroup, bool abc,bool doFilter)
         {
 
             //MessageBox.Show("write "+mode+" "+lines.Count);
@@ -238,8 +240,6 @@ namespace LDS_Feldolgozo
             {
                 lines = linesInput;
             }
-
-            this.form = form;
             this.form.statusText.Hide();
             this.form.progressBar.Show();
             this.form.progressBar.Minimum = 0;
@@ -305,7 +305,7 @@ namespace LDS_Feldolgozo
                 }
 
                 // 'egyéb' csoport
-                Area etc = null;
+                Area? etc = null;
                 foreach (Line l in lines)
                 {
                     bool found = false;
@@ -481,9 +481,10 @@ namespace LDS_Feldolgozo
                 return sourcePath;
             }
         }
-        public ExcelSource(string path)
+        public ExcelSource(string path, MainForm form)
         {
             sourcePath = path;
+            this.form = form;
         }
         //egy adott indexű sort olvas ki
         private bool readProdLine(int i, LDSexport src)
@@ -523,7 +524,7 @@ namespace LDS_Feldolgozo
 
                 return true;
             }
-            catch(ExitClose ex) { throw new ExitClose(); }
+            catch(ExitClose) { throw new ExitClose(); }
         }
         //egy adott indexű sort olvas ki
         private bool readDownLine(int i, LDSexport src)
@@ -559,7 +560,7 @@ namespace LDS_Feldolgozo
         {
             try
             {
-                this.form = form;
+                
                 lines.Clear();
                 from = DateTime.Now; //hogy legyen minél kisebb, különben 1900-on marad
                 for (int j = 0; j < threadNum && !form.closing; ++j)
@@ -605,7 +606,7 @@ namespace LDS_Feldolgozo
 
                 status[threadIndex] = false;
             }
-            catch(ExitClose ex) {}
+            catch(ExitClose) {}
         }
         private void readThreadDown(int threadIndex)
         {
@@ -638,6 +639,8 @@ namespace LDS_Feldolgozo
         public Excel()
         {
             this.wb = exe.Workbooks.Add(XlWBATemplate.xlWBATWorksheet);
+            path = "";
+            this.ws = this.wb.Worksheets[1];
         }
         public static void KillSpecificExcelFileProcess(string excelFileName)
         {
@@ -681,8 +684,8 @@ namespace LDS_Feldolgozo
         string path;
         _Application exe = new _Excel.Application();
         Workbook wb;
-        public Worksheet prod;
-        public Worksheet downtime;
+        public Worksheet? prod;
+        public Worksheet? downtime;
         public LDSexport(string path) { 
             this.path = path;
             this.wb   = this.exe.Workbooks.Open(path);
